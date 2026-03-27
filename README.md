@@ -4,36 +4,39 @@ A comprehensive full-stack web application for analyzing historical New Zealand 
 
 ## 🏗️ Architecture
 
-PredictLottoNZ employs a microservices architecture with three main components:
+PredictLottoNZ employs a microservices architecture with four main components:
 
 - **Frontend**: Vue.js 3 single-page application with TypeScript
-- **Backend**: .NET Core 6 Web API with Entity Framework Core
+- **Backend**: .NET Core 8 Web API with Entity Framework Core
 - **Predictor**: Python FastAPI service with ML and GPT integration
 - **Database**: PostgreSQL 15 with automated migrations
+- **Cache**: Redis 7 for distributed caching and performance optimization
 
 ```mermaid
 graph TB
     subgraph "Frontend Layer"
         VUE[Vue.js SPA]
     end
-    
+
     subgraph "Backend Layer"
         API[.NET Core Web API]
         DB[(PostgreSQL Database)]
+        REDIS[(Redis Cache)]
     end
-    
+
     subgraph "Prediction Layer"
         FASTAPI[Python FastAPI Service]
         ML[ML Models]
         GPT[GPT Integration]
     end
-    
+
     subgraph "Future Services"
         AWS[AWS LLM Service]
     end
-    
+
     VUE --> API
     API --> DB
+    API --> REDIS
     API --> FASTAPI
     API -.-> AWS
     FASTAPI --> ML
@@ -43,10 +46,12 @@ graph TB
 ## 📋 Prerequisites
 
 ### Required for Docker Deployment
+
 - **Docker**: Version 20.10 or higher
 - **Docker Compose**: Version 2.0 or higher
 
 ### Required for Local Development
+
 - **.NET SDK**: Version 6.0 or higher
 
 ## 📚 API Documentation
@@ -54,23 +59,56 @@ graph TB
 The backend API includes comprehensive Swagger/OpenAPI documentation for easy testing and exploration of all available endpoints.
 
 ### Accessing Swagger UI
-- **Local Development**: http://localhost:5001/swagger
+
 - **Docker Development**: http://localhost:5000/swagger
 - **Root Redirect**: In development, visiting the root URL (/) automatically redirects to Swagger
 - **Production**: Swagger UI is disabled in production for security reasons
 
 ### Features
+
 - **Interactive Testing**: Test all API endpoints directly from the browser (development only)
 - **Comprehensive Documentation**: Detailed parameter descriptions and response examples
 - **Authentication Support**: Test secured endpoints with JWT tokens
 - **Development Environment**: Available only in development mode for security
 
 For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
+
+## 🔍 LangSmith Observability
+
+The project includes LangSmith integration for comprehensive observability and tracing of AI-powered predictions.
+
+### Features
+
+- **Automatic Tracing**: All LLM calls are automatically logged with inputs, outputs, and metadata
+- **Performance Monitoring**: Track response times, error rates, and token usage
+- **Debugging Tools**: Visual inspection of prediction chains and reasoning steps
+- **Feedback Collection**: Track prediction accuracy against actual lottery results
+- **Dataset Management**: Store and evaluate test cases
+
+### Quick Setup
+
+1. **Get your LangSmith API key** from [smith.langchain.com](https://smith.langchain.com)
+2. **Add to `.env` file**:
+   ```env
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=your_langsmith_api_key
+   LANGCHAIN_PROJECT=predict-lotto-nz
+   ```
+3. **Install dependencies**: `pip install -r predictor/requirements.txt`
+4. **View traces**: https://smith.langchain.com
+
+For detailed setup instructions, see:
+
+- [LangSmith Setup Guide](docs/LANGSMITH_SETUP.md)
+- [Quick Reference](docs/LANGSMITH_QUICK_REFERENCE.md)
+- [Integration Summary](docs/LANGSMITH_INTEGRATION_SUMMARY.md)
+
 - **Node.js**: Version 18 or higher with npm
 - **Python**: Version 3.11 or higher with pip
 - **PostgreSQL**: Version 15 or higher (optional, can use Docker)
 
 ### Optional Services
+
 - **OpenAI API Key**: For GPT-powered predictions
 - **AWS Account**: For AWS LLM service integration
 
@@ -79,29 +117,32 @@ For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
 ### Option 1: Docker Deployment (Recommended)
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd predict-lotto-nz
    ```
 
 2. **Configure environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit the `.env` file with your configuration:
+
    ```env
    # Database Configuration
    POSTGRES_PASSWORD=your_secure_password
    POSTGRES_DB=predict_lotto_nz
    POSTGRES_USER=postgres
-   
+
    # Service Ports
    BACKEND_PORT=5000
-   FRONTEND_PORT=3000
+   FRONTEND_PORT=3001
    PREDICTOR_PORT=8000
    POSTGRES_PORT=5434
-   
+
    # Optional: AI Services
    OPENAI_API_KEY=your_openai_api_key
    AWS_REGION=us-west-2
@@ -110,25 +151,27 @@ For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
    ```
 
 3. **Start all services**
+
    ```bash
    # Production mode
    docker-compose up -d
-   
+
    # Or development mode with hot reload
    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    ```
 
 4. **Verify deployment**
+
    ```bash
    # Test Docker setup
    ./scripts/test-docker.ps1 -HealthCheck
-   
+
    # Or manually check services
    docker-compose ps
    ```
 
 5. **Access the application**
-   - **Frontend**: http://localhost:3000
+   - **Frontend**: http://localhost:3001
    - **Backend API**: http://localhost:5000
    - **API Documentation**: http://localhost:5000/swagger
    - **Predictor Service**: http://localhost:8000
@@ -138,11 +181,13 @@ For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
 ### Option 2: Local Development Setup
 
 1. **Start PostgreSQL**
+
    ```bash
    docker-compose up -d postgres
    ```
 
 2. **Backend Setup**
+
    ```bash
    cd backend
    dotnet restore
@@ -151,6 +196,7 @@ For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
    ```
 
 3. **Frontend Setup**
+
    ```bash
    cd frontend
    npm install
@@ -167,58 +213,104 @@ For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
 ## ⚙️ Environment Variables
 
 ### Database Configuration
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `POSTGRES_PASSWORD` | ✅ | - | PostgreSQL database password |
-| `POSTGRES_DB` | ❌ | `predict_lotto_nz` | Database name |
-| `POSTGRES_USER` | ❌ | `postgres` | Database username |
-| `POSTGRES_PORT` | ❌ | `5434` | Database port |
+
+| Variable            | Required | Default            | Description                  |
+| ------------------- | -------- | ------------------ | ---------------------------- |
+| `POSTGRES_PASSWORD` | ✅       | -                  | PostgreSQL database password |
+| `POSTGRES_DB`       | ❌       | `predict_lotto_nz` | Database name                |
+| `POSTGRES_USER`     | ❌       | `postgres`         | Database username            |
+| `POSTGRES_PORT`     | ❌       | `5434`             | Database port                |
 
 ### Service Ports
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `BACKEND_PORT` | ❌ | `5000` | Backend API port |
-| `FRONTEND_PORT` | ❌ | `3000` | Frontend application port |
-| `PREDICTOR_PORT` | ❌ | `8000` | Predictor service port |
+
+| Variable         | Required | Default | Description               |
+| ---------------- | -------- | ------- | ------------------------- |
+| `BACKEND_PORT`   | ❌       | `5000`  | Backend API port          |
+| `FRONTEND_PORT`  | ❌       | `3001`  | Frontend application port |
+| `PREDICTOR_PORT` | ❌       | `8000`  | Predictor service port    |
 
 ### AI Services (Optional)
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | ❌ | - | OpenAI API key for GPT predictions |
-| `AWS_REGION` | ❌ | `us-west-2` | AWS region for LLM services |
-| `AWS_ACCESS_KEY_ID` | ❌ | - | AWS access key ID |
-| `AWS_SECRET_ACCESS_KEY` | ❌ | - | AWS secret access key |
+
+| Variable                | Required | Default     | Description                        |
+| ----------------------- | -------- | ----------- | ---------------------------------- |
+| `OPENAI_API_KEY`        | ❌       | -           | OpenAI API key for GPT predictions |
+| `AWS_REGION`            | ❌       | `us-west-2` | AWS region for LLM services        |
+| `AWS_ACCESS_KEY_ID`     | ❌       | -           | AWS access key ID                  |
+| `AWS_SECRET_ACCESS_KEY` | ❌       | -           | AWS secret access key              |
 
 ### Application Configuration
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `ASPNETCORE_ENVIRONMENT` | ❌ | `Development` | .NET environment |
-| `VUE_APP_API_BASE_URL` | ❌ | `http://localhost:5000` | Frontend API base URL |
-| `LOG_LEVEL` | ❌ | `INFO` | Python service log level |
+
+| Variable                 | Required | Default                 | Description              |
+| ------------------------ | -------- | ----------------------- | ------------------------ |
+| `ASPNETCORE_ENVIRONMENT` | ❌       | `Development`           | .NET environment         |
+| `VUE_APP_API_BASE_URL`   | ❌       | `http://localhost:5000` | Frontend API base URL    |
+| `LOG_LEVEL`              | ❌       | `INFO`                  | Python service log level |
 
 ## 🛠️ Development
+
+### 📖 Development Mode Documentation
+
+**Important**: Your Docker setup supports two modes:
+
+- **Production Mode** (current): Code changes require rebuild
+- **Development Mode** (recommended): Automatic hot-reload
+
+**📚 Complete Guide**: See [DEVELOPMENT_VS_PRODUCTION.md](DEVELOPMENT_VS_PRODUCTION.md) for detailed comparison  
+**🔧 Workflow Guide**: See [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) for complete instructions
+
+### Quick Start - Development Mode
+
+```powershell
+# Start with automatic hot-reload (recommended for development)
+.\scripts\dev-start.ps1
+
+# View logs
+.\scripts\dev-logs.ps1
+
+# Restart a service
+.\scripts\dev-restart.ps1 backend
+```
 
 ### Development Workflow
 
 1. **Start development environment**
+
    ```bash
-   # Start all services in development mode
+   # Start all services in development mode with hot-reload
    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-   
+
+   # Or use the helper script (Windows)
+   .\scripts\dev-start.ps1
+
    # Or start individual services
    docker-compose up -d postgres  # Database only
    ```
 
-2. **Run services locally for development**
+2. **Edit code and see changes automatically**
+   - **Backend**: Edit .cs files → Auto-recompiles via `dotnet watch` in ~5-10 seconds
+   - **Frontend**: Edit .vue/.ts files → Hot-reload in ~1-2 seconds
+   - **Predictor**: Edit .py files → Auto-restarts in ~2-3 seconds
+
+3. **When to rebuild** (only needed for dependency changes)
+
+   ```powershell
+   # After adding new packages
+   .\scripts\dev-rebuild.ps1 backend   # Added NuGet packages
+   .\scripts\dev-rebuild.ps1 frontend  # Added npm packages
+   .\scripts\dev-rebuild.ps1 predictor # Added pip packages
+   ```
+
+4. **Run services locally for development** (alternative to Docker)
+
    ```bash
    # Backend with hot reload
    cd backend
    dotnet watch run
-   
+
    # Frontend with hot reload
    cd frontend
    npm run dev
-   
+
    # Predictor with hot reload
    cd predictor
    uvicorn main:app --reload --port 8000
@@ -227,6 +319,7 @@ For detailed API documentation, see [docs/SWAGGER.md](docs/SWAGGER.md)
 ### Testing
 
 #### Backend Tests
+
 ```bash
 cd backend
 dotnet test                           # Run all tests
@@ -235,6 +328,7 @@ dotnet test --filter "Category=PBT"  # Property-based tests only
 ```
 
 #### Frontend Tests
+
 ```bash
 cd frontend
 npm run test          # Run tests in watch mode
@@ -243,6 +337,7 @@ npm run test:coverage # Run with coverage report
 ```
 
 #### Predictor Tests
+
 ```bash
 cd predictor
 python -m pytest                    # Run all tests
@@ -253,6 +348,7 @@ python -m pytest -v --tb=short      # Verbose output
 ### Database Management
 
 #### Migrations
+
 ```bash
 cd backend
 dotnet ef migrations add <MigrationName>  # Create migration
@@ -261,6 +357,7 @@ dotnet ef database drop                   # Drop database
 ```
 
 #### Seeding Data
+
 ```bash
 # Import sample lottery data
 curl -X POST -F "file=@sample-data.csv" http://localhost:5000/api/lotto/upload
@@ -319,9 +416,11 @@ predict-lotto-nz/
 ## 🔧 Services
 
 ### Backend (.NET Core Web API)
+
 **Port**: 5000 | **Health Check**: `/api/health`
 
 **Features**:
+
 - CSV file upload and parsing with duplicate detection
 - Historical lottery data management
 - Number combination validation and storage
@@ -331,6 +430,7 @@ predict-lotto-nz/
 - Comprehensive logging and error handling
 
 **Key Endpoints**:
+
 - `POST /api/lotto/upload` - Upload lottery CSV files
 - `GET /api/lotto/latest` - Get latest lottery draw
 - `GET /api/lotto/exists/{draw}` - Check if draw exists
@@ -339,9 +439,11 @@ predict-lotto-nz/
 - `GET /api/health` - Health check
 
 ### Frontend (Vue.js)
-**Port**: 3000 | **Health Check**: `/health`
+
+**Port**: 3001 | **Health Check**: `/health`
 
 **Features**:
+
 - Modern Vue 3 with TypeScript and Composition API
 - File upload with real-time progress tracking
 - Responsive design for desktop and mobile
@@ -351,15 +453,18 @@ predict-lotto-nz/
 - Component-based architecture
 
 **Key Components**:
+
 - `FileUpload.vue` - File upload with progress
 - `PredictionsView.vue` - Prediction display
 - `LatestDraw.vue` - Latest draw information
 - `SideMenu.vue` - Navigation and notifications
 
 ### Predictor (Python FastAPI)
+
 **Port**: 8000 | **Health Check**: `/health`
 
 **Features**:
+
 - Machine learning prediction models using scikit-learn
 - OpenAI GPT integration for AI-powered predictions
 - Blended prediction algorithms combining ML and AI
@@ -368,15 +473,18 @@ predict-lotto-nz/
 - Async request handling for performance
 
 **Key Endpoints**:
+
 - `POST /predict` - Generate predictions
 - `POST /train` - Train ML models
 - `GET /health` - Health check
 - `GET /docs` - API documentation
 
 ### Database (PostgreSQL)
+
 **Port**: 5434 | **Health Check**: Built-in
 
 **Features**:
+
 - Stores historical lottery draws with full metadata
 - Number combination management with timestamps
 - Prediction tracking with source identification
@@ -384,9 +492,24 @@ predict-lotto-nz/
 - Automated migrations and seeding
 - Performance optimized with indexes
 
+### Cache (Redis)
+
+**Port**: 6379 | **Health Check**: `PING` command
+
+**Features**:
+
+- Distributed caching for improved performance
+- Session storage and temporary data
+- Frequency analysis result caching
+- Prediction result caching
+- Automatic cache invalidation
+- Memory-efficient data structures
+- Persistence with append-only file (AOF)
+
 ## 📚 API Documentation
 
 ### Interactive API Documentation
+
 Once services are running, comprehensive API documentation is available:
 
 - **Backend API**: http://localhost:5000/swagger
@@ -402,6 +525,7 @@ Once services are running, comprehensive API documentation is available:
 ### Key API Endpoints
 
 #### Lottery Data Management
+
 ```http
 # Upload lottery CSV file
 POST /api/lotto/upload
@@ -418,6 +542,7 @@ Response: LottoDrawDto
 ```
 
 #### Prediction Management
+
 ```http
 # Upload number combinations
 POST /api/combinations/upload
@@ -437,16 +562,19 @@ Body: { "weekly_numbers": [1, 2, 3, 4, 5, 6] }
 ## 🏥 Health Checks and Monitoring
 
 ### Health Check Endpoints
+
 All services include comprehensive health checks:
 
-| Service | Endpoint | Port | Status |
-|---------|----------|------|--------|
-| Backend | `/api/health` | 5000 | Application health |
-| Frontend | `/health` | 3000 | Nginx status |
-| Predictor | `/health` | 8000 | Service health |
-| Database | Built-in | 5434 | PostgreSQL ready |
+| Service   | Endpoint       | Port | Status             |
+| --------- | -------------- | ---- | ------------------ |
+| Backend   | `/api/health`  | 5000 | Application health |
+| Frontend  | `/health`      | 3001 | Nginx status       |
+| Predictor | `/health`      | 8000 | Service health     |
+| Database  | Built-in       | 5434 | PostgreSQL ready   |
+| Redis     | `PING` command | 6379 | Cache availability |
 
 ### Monitoring Commands
+
 ```bash
 # Check all service health
 ./scripts/test-docker.ps1 -HealthCheck
@@ -464,6 +592,7 @@ docker stats
 ## 🔧 Deployment
 
 ### Local Deployment
+
 ```bash
 # Production deployment
 docker-compose up -d
@@ -475,7 +604,9 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ### Cloud Deployment
 
 #### AWS Deployment
+
 1. **Set up AWS credentials**
+
    ```bash
    export AWS_ACCESS_KEY_ID=your_access_key
    export AWS_SECRET_ACCESS_KEY=your_secret_key
@@ -483,24 +614,27 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    ```
 
 2. **Deploy using Docker Compose**
+
    ```bash
    # Update environment variables for cloud
    cp .env.example .env.production
    # Edit .env.production with cloud-specific values
-   
+
    # Deploy
    docker-compose --env-file .env.production up -d
    ```
 
 #### Azure Deployment
+
 1. **Configure Azure Container Instances**
+
    ```bash
    # Set Azure credentials
    az login
-   
+
    # Create resource group
    az group create --name predict-lotto-rg --location eastus
-   
+
    # Deploy container group
    az container create --resource-group predict-lotto-rg \
      --file docker-compose.yml
@@ -509,6 +643,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ### Production Considerations
 
 #### Security
+
 - Change default passwords in production
 - Use secrets management for API keys
 - Enable HTTPS with SSL certificates
@@ -516,12 +651,14 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 - Use non-root users in containers
 
 #### Performance
+
 - Configure database connection pooling
 - Set up Redis for caching (optional)
 - Use CDN for static assets
 - Configure load balancing for high availability
 
 #### Monitoring
+
 - Set up application logging
 - Configure health check monitoring
 - Use container orchestration (Kubernetes)
@@ -529,21 +666,57 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 ## 🐛 Troubleshooting
 
+### Quick Links
+
+- **System Status**: See `SYSTEM_STATUS.md` for current service status
+- **Docker Build Issues**: See `DOCKER_FIX_SUMMARY.md` for recent fixes
+- **Quick Fix Guide**: See `DOCKER_QUICK_FIX.md` for common solutions
+- **Detailed Troubleshooting**: See `docs/DOCKER_TROUBLESHOOTING.md`
+
+### Helper Scripts (Windows)
+
+```powershell
+# Verify all services are healthy
+.\scripts\verify-services.ps1
+
+# Start database only (quick access)
+.\scripts\start-db-only.ps1
+
+# Rebuild predictor service
+.\scripts\rebuild-predictor.ps1
+
+# Full rebuild with cache clearing
+.\scripts\docker-rebuild.ps1
+```
+
 ### Common Issues
 
-#### Port Conflicts
-```bash
-# Check which ports are in use
-netstat -tulpn | grep :3000
-netstat -tulpn | grep :5000
-netstat -tulpn | grep :8000
-netstat -tulpn | grep :5434
+#### Docker Build Hanging
 
-# Kill processes using required ports
-sudo kill -9 $(lsof -t -i:3000)
+If the Docker build hangs on package downloads:
+
+```powershell
+# Use the rebuild script (includes fixes)
+.\scripts\docker-rebuild.ps1
+
+# Or manually rebuild with no cache
+docker-compose build --no-cache predictor
+```
+
+See `DOCKER_FIX_SUMMARY.md` for details on the recent pydantic version conflict fix.
+
+#### Port Conflicts
+
+```bash
+# Check which ports are in use (Windows)
+netstat -ano | Select-String ":3001"
+netstat -ano | Select-String ":5000"
+netstat -ano | Select-String ":8000"
+netstat -ano | Select-String ":5434"
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Check PostgreSQL container status
 docker-compose ps postgres
@@ -553,14 +726,21 @@ docker-compose logs postgres
 
 # Connect to database manually
 docker-compose exec postgres psql -U postgres -d predict_lotto_nz
+
+# Or use the quick script
+.\scripts\start-db-only.ps1
 ```
 
 #### Service Startup Issues
+
 ```bash
 # Check service health
 curl http://localhost:5000/api/health
 curl http://localhost:8000/health
-curl http://localhost:3000/health
+curl http://localhost:3001
+
+# Or use the verification script
+.\scripts\verify-services.ps1
 
 # Restart specific service
 docker-compose restart backend
@@ -569,6 +749,7 @@ docker-compose restart frontend
 ```
 
 #### Environment Variable Issues
+
 ```bash
 # Verify environment variables are loaded
 docker-compose config
@@ -581,6 +762,7 @@ docker-compose exec predictor env | grep OPENAI
 ### Debugging Commands
 
 #### View Logs
+
 ```bash
 # All services
 docker-compose logs -f
@@ -595,6 +777,7 @@ docker-compose logs --tail=100 backend
 ```
 
 #### Container Inspection
+
 ```bash
 # List running containers
 docker ps
@@ -608,6 +791,7 @@ docker-compose exec predictor bash
 ```
 
 #### Database Debugging
+
 ```bash
 # Connect to database
 docker-compose exec postgres psql -U postgres -d predict_lotto_nz
@@ -625,6 +809,7 @@ SELECT * FROM "Predictions" ORDER BY "CreatedAt" DESC LIMIT 10;
 ### Reset and Clean Up
 
 #### Reset Database
+
 ```bash
 # Stop services and remove volumes
 docker-compose down -v
@@ -637,6 +822,7 @@ docker-compose exec backend dotnet ef database update
 ```
 
 #### Clean Docker Environment
+
 ```bash
 # Remove all containers and images
 docker-compose down --rmi all
@@ -654,6 +840,7 @@ docker-compose up -d
 ### Running Tests
 
 #### Backend Tests (.NET)
+
 ```bash
 cd backend
 dotnet test                                    # All tests
@@ -663,6 +850,7 @@ dotnet test --logger "console;verbosity=detailed"  # Verbose output
 ```
 
 #### Frontend Tests (Vue.js)
+
 ```bash
 cd frontend
 npm run test                    # Interactive test runner
@@ -671,6 +859,7 @@ npm run test:coverage          # With coverage report
 ```
 
 #### Predictor Tests (Python)
+
 ```bash
 cd predictor
 python -m pytest                              # All tests
@@ -682,6 +871,7 @@ python -m pytest --cov=. --cov-report=html   # Coverage report
 ### Test Categories
 
 #### Property-Based Tests (PBT)
+
 The system includes comprehensive property-based tests that verify correctness properties:
 
 - **CSV Parsing**: Validates data extraction and transformation
@@ -691,14 +881,18 @@ The system includes comprehensive property-based tests that verify correctness p
 - **Database Operations**: Validates data persistence
 
 #### Unit Tests
+
 Traditional unit tests cover:
+
 - Individual service methods
 - Controller endpoints
 - Component behavior
 - Error handling scenarios
 
 #### Integration Tests
+
 End-to-end tests verify:
+
 - Complete user workflows
 - Service communication
 - Database transactions
@@ -707,13 +901,15 @@ End-to-end tests verify:
 ## 📊 Usage Examples
 
 ### Uploading Lottery Data
-1. Navigate to http://localhost:3000
+
+1. Navigate to http://localhost:3001
 2. Click "Upload CSV File"
 3. Select a Powerball NZ CSV file
 4. Monitor upload progress
 5. View import results (records added/skipped)
 
 ### Generating Predictions
+
 1. Upload historical lottery data (optional)
 2. Click "Generate Predictions"
 3. Select number of predictions (1-10)
@@ -725,6 +921,7 @@ End-to-end tests verify:
 ### API Usage Examples
 
 #### Upload CSV File
+
 ```bash
 curl -X POST \
   -F "file=@powerball-data.csv" \
@@ -732,6 +929,7 @@ curl -X POST \
 ```
 
 #### Get Predictions
+
 ```bash
 curl -X GET \
   "http://localhost:5000/api/combinations/predictions?count=5" \
@@ -739,6 +937,7 @@ curl -X GET \
 ```
 
 #### Generate AI Predictions
+
 ```bash
 curl -X POST \
   -H "Content-Type: application/json" \
@@ -751,18 +950,22 @@ curl -X POST \
 We welcome contributions! Please follow these guidelines:
 
 ### Development Process
+
 1. **Fork the repository**
+
    ```bash
    git clone https://github.com/your-username/predict-lotto-nz.git
    cd predict-lotto-nz
    ```
 
 2. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 3. **Set up development environment**
+
    ```bash
    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    ```
@@ -773,13 +976,14 @@ We welcome contributions! Please follow these guidelines:
    - Update documentation as needed
 
 5. **Run tests**
+
    ```bash
    # Backend tests
    cd backend && dotnet test
-   
+
    # Frontend tests
    cd frontend && npm run test:run
-   
+
    # Predictor tests
    cd predictor && python -m pytest
    ```
@@ -792,24 +996,28 @@ We welcome contributions! Please follow these guidelines:
 ### Code Style Guidelines
 
 #### .NET Backend
+
 - Follow Microsoft C# coding conventions
 - Use async/await for I/O operations
 - Implement proper error handling
 - Add XML documentation for public APIs
 
 #### Vue.js Frontend
+
 - Use TypeScript for type safety
 - Follow Vue 3 Composition API patterns
 - Use Pinia for state management
 - Implement proper component props validation
 
 #### Python Predictor
+
 - Follow PEP 8 style guidelines
 - Use type hints for function signatures
 - Implement proper async patterns
 - Add docstrings for all functions
 
 ### Testing Requirements
+
 - All new features must include tests
 - Property-based tests for core algorithms
 - Unit tests for individual components
@@ -841,6 +1049,7 @@ For support and questions:
 ## 🔄 Changelog
 
 ### Version 1.0.0 (Current)
+
 - Initial release with full-stack architecture
 - CSV file upload and parsing
 - Frequency-based predictions
@@ -849,6 +1058,7 @@ For support and questions:
 - Comprehensive testing suite
 
 ### Planned Features
+
 - Real-time lottery data feeds
 - Advanced ML models (neural networks)
 - User authentication and profiles
