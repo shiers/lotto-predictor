@@ -1,0 +1,39 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+coverage/
+
+# Docker files
+Dockerfile*
+docker-compose*
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Environment files
+.env*
+
+# Uploads directory (will be mounted as volume)
+uploads/
