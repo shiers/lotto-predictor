@@ -8,7 +8,12 @@ services:
     environment:
       POSTGRES_PASSWORD: password
     volumes:
-      - ./scripts/dev-data.sql:/docker-entrypoint-initdb.d/dev-data.sql
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  redis:
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --loglevel verbose
 
   backend:
     build:
@@ -17,13 +22,21 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
+      REDIS_CONNECTION_STRING: "redis:6379"
+      GROQCLOUD_API_KEY: ${GROQCLOUD_API_KEY}
+      GROQCLOUD_MODEL: ${GROQCLOUD_MODEL:-llama-3.3-70b-versatile}
+      GROQCLOUD_BASE_URL: ${GROQCLOUD_BASE_URL:-https://api.groq.com/openai/v1}
+      GROQCLOUD_TEMPERATURE: ${GROQCLOUD_TEMPERATURE:-0.7}
+      GROQCLOUD_MAX_TOKENS: ${GROQCLOUD_MAX_TOKENS:-4096}
+      GROQCLOUD_TIMEOUT_SECONDS: ${GROQCLOUD_TIMEOUT_SECONDS:-30}
+      GROQCLOUD_MAX_RETRIES: ${GROQCLOUD_MAX_RETRIES:-3}
     volumes:
       - ./backend:/app
       - /app/bin
       - /app/obj
     ports:
       - "5000:80"
-      - "5001:443"
+      - "5002:443"
 
   frontend:
     build:
@@ -36,7 +49,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3000:8080"
+      - "3001:8080"
 
   predictor:
     build:

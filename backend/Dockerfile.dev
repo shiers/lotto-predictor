@@ -1,6 +1,10 @@
 # Development Dockerfile with hot reload
-FROM mcr.microsoft.com/dotnet/sdk:6.0
+FROM mcr.microsoft.com/dotnet/sdk:8.0
 WORKDIR /src
+
+# Workaround for transient TLS/SSL issues during dotnet restore in Docker
+ENV DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0 \
+    NUGET_CERT_REVOCATION_MODE=offline
 
 # Install dotnet-ef tool for migrations
 RUN dotnet tool install --global dotnet-ef
@@ -8,7 +12,11 @@ ENV PATH="$PATH:/root/.dotnet/tools"
 
 # Copy project file and restore dependencies
 COPY *.csproj ./
-RUN dotnet restore
+# Retry restore up to 3 times to handle transient TLS/SSL issues
+RUN for i in 1 2 3; do \
+    dotnet restore --disable-parallel && break || \
+    (echo "Restore attempt $i failed, retrying..." && sleep 5); \
+    done
 
 # Copy source code
 COPY . ./

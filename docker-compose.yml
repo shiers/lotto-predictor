@@ -21,6 +21,24 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: predict-lotto-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - predict-lotto-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
   # .NET Core Backend API
   backend:
     build:
@@ -31,6 +49,7 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-predict_lotto_nz};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-password}"
+      REDIS_CONNECTION_STRING: "redis:6379"
       PredictorService__BaseUrl: ${PREDICTOR_SERVICE_URL:-http://predictor:8000}
       AWS__Region: ${AWS_REGION:-us-west-2}
       AWS__AccessKeyId: ${AWS_ACCESS_KEY_ID}
@@ -40,6 +59,8 @@ services:
       - "${BACKEND_PORT:-5000}:80"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       predictor:
         condition: service_started
@@ -90,6 +111,17 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       MODEL_PATH: ${MODEL_PATH:-/app/models}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # GroqCloud Configuration
+      GROQCLOUD_API_KEY: ${GROQCLOUD_API_KEY}
+      GROQCLOUD_MODEL: ${GROQCLOUD_MODEL:-llama-3.3-70b-versatile}
+      GROQCLOUD_TEMPERATURE: ${GROQCLOUD_TEMPERATURE:-0.7}
+      GROQCLOUD_MAX_TOKENS: ${GROQCLOUD_MAX_TOKENS:-4096}
+      GROQCLOUD_BASE_URL: ${GROQCLOUD_BASE_URL:-https://api.groq.com/openai/v1}
+      # LangSmith Configuration
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-true}
+      LANGCHAIN_ENDPOINT: ${LANGCHAIN_ENDPOINT:-https://api.smith.langchain.com}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-predict-lotto-nz}
     ports:
       - "${PREDICTOR_PORT:-8000}:8000"
     networks:
@@ -114,6 +146,9 @@ volumes:
   postgres_data:
     driver: local
     name: predict-lotto-postgres-data
+  redis_data:
+    driver: local
+    name: predict-lotto-redis-data
   predictor_models:
     driver: local
     name: predict-lotto-predictor-models
