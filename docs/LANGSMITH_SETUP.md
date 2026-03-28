@@ -7,6 +7,7 @@ LangSmith provides observability, debugging, and evaluation tools for your LLM-p
 ## What is LangSmith?
 
 LangSmith is LangChain's platform for:
+
 - **Tracing**: Automatic logging of all LLM calls with inputs, outputs, and metadata
 - **Debugging**: Visual inspection of prediction chains and reasoning steps
 - **Monitoring**: Performance metrics, error rates, and cost tracking
@@ -22,7 +23,7 @@ Your `.env` file is already configured with:
 ```bash
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
-LANGCHAIN_API_KEY=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
+LANGCHAIN_API_KEY=lsv2_pt_your_langchain_api_key_here
 LANGCHAIN_PROJECT=predict-lotto-nz
 ```
 
@@ -34,6 +35,7 @@ pip install -r requirements.txt
 ```
 
 This installs:
+
 - `langsmith` - Core LangSmith client
 - `langchain` - LangChain framework
 - `langchain-groq` - GroqCloud integration
@@ -90,10 +92,10 @@ from langsmith.run_helpers import get_current_run_tree
 @traceable(name="generate_lottery_numbers")
 def generate_prediction(historical_data, count=6):
     """Generate lottery numbers with LangSmith tracing"""
-    
+
     # Your prediction logic here
     numbers = [1, 2, 3, 4, 5, 6]
-    
+
     # Add metadata to trace
     run = get_current_run_tree()
     if run:
@@ -102,7 +104,7 @@ def generate_prediction(historical_data, count=6):
             "data_points": len(historical_data),
             "model_version": "v1.0"
         })
-    
+
     return numbers
 
 # Call will be traced
@@ -120,6 +122,7 @@ result = generate_prediction(historical_data=[...], count=6)
 ### Trace Information
 
 Each trace includes:
+
 - **Input**: Prompt and parameters
 - **Output**: Generated predictions
 - **Metadata**: Model, temperature, tokens
@@ -192,7 +195,7 @@ def accuracy_evaluator(run, example):
     """Custom evaluator for prediction accuracy"""
     predicted = run.outputs["numbers"]
     actual = example.outputs["actual_draw"]
-    
+
     matches = len(set(predicted) & set(actual))
     return {"score": matches / 6}
 
@@ -311,12 +314,14 @@ python scripts/evaluate_predictions.py --dataset=last-30-days
 ### Traces Not Appearing
 
 1. Check environment variables are set:
+
    ```bash
    echo $LANGCHAIN_TRACING_V2
    echo $LANGCHAIN_API_KEY
    ```
 
 2. Verify API key is valid:
+
    ```python
    from langsmith import Client
    client = Client()
@@ -360,6 +365,7 @@ python scripts/evaluate_predictions.py --dataset=last-30-days
 ## Support
 
 For issues or questions:
+
 - LangSmith Discord: [discord.gg/langchain](https://discord.gg/langchain)
 - Documentation: [docs.smith.langchain.com](https://docs.smith.langchain.com)
 - GitHub Issues: [github.com/langchain-ai/langsmith-sdk](https://github.com/langchain-ai/langsmith-sdk)

@@ -1,10 +1,20 @@
 @echo off
 REM Start predictor service with LangSmith environment variables
+REM Set these environment variables in your shell or .env file before running:
+REM   LANGCHAIN_API_KEY, GROQCLOUD_API_KEY
+
 set LANGCHAIN_TRACING_V2=true
-set LANGCHAIN_API_KEY=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
 set LANGCHAIN_PROJECT=predict-lotto-nz
 set LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
-set GROQCLOUD_API_KEY=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
+
+if "%LANGCHAIN_API_KEY%"=="" (
+    echo ERROR: LANGCHAIN_API_KEY environment variable is not set
+    exit /b 1
+)
+if "%GROQCLOUD_API_KEY%"=="" (
+    echo ERROR: GROQCLOUD_API_KEY environment variable is not set
+    exit /b 1
+)
 
 echo Starting PredictLottoNZ Prediction Service with LangSmith...
 python main_with_langsmith.py
