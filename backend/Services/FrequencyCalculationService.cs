@@ -9,6 +9,7 @@ namespace PredictLottoNZ.Services;
 public interface IFrequencyCalculationService
 {
     Task<Dictionary<int, int>> CalculateNumberFrequenciesAsync();
+    Task<Dictionary<int, int>> CalculatePowerballFrequenciesAsync();
     Task<IEnumerable<PredictionResult>> GenerateTopPredictionsAsync(int count);
     Task<double> CalculateCombinationScoreAsync(int[] numbers);
 }
@@ -20,6 +21,7 @@ public class FrequencyCalculationService : IFrequencyCalculationService
     private readonly ILogger<FrequencyCalculationService> _logger;
     
     private const string FREQUENCY_CACHE_KEY = "number_frequencies";
+    private const string POWERBALL_FREQUENCY_CACHE_KEY = "powerball_frequencies";
     private const int CACHE_EXPIRY_MINUTES = 30;
     
     public FrequencyCalculationService(
@@ -93,6 +95,47 @@ public class FrequencyCalculationService : IFrequencyCalculationService
         return frequencies;
     }
     
+    public async Task<Dictionary<int, int>> CalculatePowerballFrequenciesAsync()
+    {
+        // Check cache first
+        if (_cache.TryGetValue(POWERBALL_FREQUENCY_CACHE_KEY, out Dictionary<int, int>? cachedFrequencies))
+        {
+            _logger.LogDebug("Retrieved Powerball frequencies from cache");
+            return cachedFrequencies!;
+        }
+        
+        _logger.LogInformation("Calculating Powerball frequencies from database");
+        
+        var frequencies = new Dictionary<int, int>();
+        
+        // Initialize all Powerball numbers 1-10 with zero frequency
+        for (int i = 1; i <= 10; i++)
+        {
+            frequencies[i] = 0;
+        }
+        
+        // Get all historical Powerball numbers from LottoDraws
+        var powerballNumbers = await _context.LottoDraws
+            .Select(d => d.Powerball)
+            .ToListAsync();
+            
+        // Count frequencies
+        foreach (var powerball in powerballNumbers)
+        {
+            if (powerball >= 1 && powerball <= 10)
+            {
+                frequencies[powerball]++;
+            }
+        }
+        
+        // Cache the results
+        _cache.Set(POWERBALL_FREQUENCY_CACHE_KEY, frequencies, TimeSpan.FromMinutes(CACHE_EXPIRY_MINUTES));
+        
+        _logger.LogInformation("Calculated Powerball frequencies for {TotalDraws} draws", powerballNumbers.Count);
+            
+        return frequencies;
+    }
+    
     public async Task<double> CalculateCombinationScoreAsync(int[] numbers)
     {
         if (numbers?.Length != 6)
@@ -123,9 +166,10 @@ public class FrequencyCalculationService : IFrequencyCalculationService
         _logger.LogInformation("Generating top {Count} frequency-based predictions", count);
         
         var frequencies = await CalculateNumberFrequenciesAsync();
+        var powerballFrequencies = await CalculatePowerballFrequenciesAsync();
         
         // Generate all possible combinations and score them
-        var predictions = new List<(int[] numbers, double score)>();
+        var predictions = new List<(int[] numbers, int powerball, double score)>();
         
         // Get the most frequent numbers to focus on
         var topNumbers = frequencies
@@ -134,13 +178,28 @@ public class FrequencyCalculationService : IFrequencyCalculationService
             .Select(kvp => kvp.Key)
             .ToArray();
         
+        // Get the most frequent Powerball numbers
+        var topPowerballs = powerballFrequencies
+            .OrderByDescending(kvp => kvp.Value)
+            .Take(5) // Focus on top 5 most frequent Powerball numbers
+            .Select(kvp => kvp.Key)
+            .ToArray();
+        
         // Generate combinations from top numbers
         var combinations = GenerateCombinations(topNumbers, 6);
         
-        foreach (var combination in combinations.Take(10000)) // Limit to prevent excessive computation
+        foreach (var combination in combinations.Take(2000)) // Limit to prevent excessive computation
         {
-            var score = await CalculateCombinationScoreAsync(combination);
-            predictions.Add((combination, score));
+            var mainScore = await CalculateCombinationScoreAsync(combination);
+            
+            // Generate predictions with different Powerball numbers
+            foreach (var powerball in topPowerballs)
+            {
+                var powerballScore = powerballFrequencies[powerball];
+                var totalScore = mainScore + (powerballScore * 0.1); // Weight Powerball less than main numbers
+                
+                predictions.Add((combination, powerball, totalScore));
+            }
         }
         
         // Sort by score descending and take top N
@@ -150,6 +209,7 @@ public class FrequencyCalculationService : IFrequencyCalculationService
             .Select(p => new PredictionResult
             {
                 Numbers = p.numbers,
+                Powerball = p.powerball,
                 Score = p.score,
                 Source = "Frequency",
                 CreatedAt = DateTime.UtcNow

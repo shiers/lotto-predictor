@@ -128,6 +128,13 @@ public static class SimpleCsvParsingTest
         }
         var numbers = winningNumbers.OrderBy(x => x).ToArray();
         
+        // Generate bonus number (different from winning numbers)
+        int bonusNumber;
+        do
+        {
+            bonusNumber = random.Next(1, 41);
+        } while (winningNumbers.Contains(bonusNumber));
+        
         return new MainModels.LottoDraw
         {
             Draw = drawNumber,
@@ -138,7 +145,7 @@ public static class SimpleCsvParsingTest
             WinningNumber4 = numbers[3],
             WinningNumber5 = numbers[4],
             WinningNumber6 = numbers[5],
-            BonusNumber = random.Next(1, 11),
+            BonusNumber = bonusNumber,
             Powerball = random.Next(1, 11),
             FromLast = random.Next(1, 100).ToString(),
             OneToTen = random.Next(0, 7),
@@ -188,3 +195,4 @@ public static class SimpleCsvParsingTest
         public List<MainModels.LottoDraw> ExpectedDraws { get; set; } = new();
     }
 }
+

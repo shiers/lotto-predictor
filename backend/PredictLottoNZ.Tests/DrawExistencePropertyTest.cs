@@ -265,3 +265,4 @@ public static class DrawExistencePropertyTest
         public List<int> InvalidDrawNumbers { get; set; } = new();
     }
 }
+

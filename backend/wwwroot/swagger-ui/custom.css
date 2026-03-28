@@ -1,0 +1,91 @@
+/* Custom Swagger UI Styling for PredictLottoNZ API */
+
+.swagger-ui .topbar {
+    background-color: #1f4e79;
+    border-bottom: 3px solid #2e6da4;
+}
+
+.swagger-ui .topbar .download-url-wrapper {
+    display: none;
+}
+
+.swagger-ui .info .title {
+    color: #1f4e79;
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+.swagger-ui .info .description {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin: 20px 0;
+}
+
+.swagger-ui .scheme-container {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+    background: #28a745;
+}
+
+.swagger-ui .opblock.opblock-post .opblock-summary-method {
+    background: #007bff;
+}
+
+.swagger-ui .opblock.opblock-put .opblock-summary-method {
+    background: #ffc107;
+}
+
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+    background: #dc3545;
+}
+
+.swagger-ui .opblock-summary-path {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-weight: bold;
+}
+
+.swagger-ui .btn.authorize {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.swagger-ui .btn.authorize:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Custom header for API sections */
+.swagger-ui .opblock-tag {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #1f4e79;
+    border-bottom: 2px solid #1f4e79;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+/* Improve response examples */
+.swagger-ui .highlight-code {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+}
+
+/* Custom footer */
+.swagger-ui .info::after {
+    content: "🎲 PredictLottoNZ API - Empowering lottery predictions with advanced analytics";
+    display: block;
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #1f4e79, #2e6da4);
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+}

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using PredictLottoNZ.Models;
 
 namespace PredictLottoNZ.Services;
@@ -19,35 +20,73 @@ public class CsvParsingService : ICsvParsingService
         // Core fields
         { "Draw", "Draw" },
         { "Date", "Date" },
+        
+        // Support both formats for winning numbers
         { "Winning Number 1", "WinningNumber1" },
         { "Winning Number 2", "WinningNumber2" },
         { "Winning Number 3", "WinningNumber3" },
         { "Winning Number 4", "WinningNumber4" },
         { "Winning Number 5", "WinningNumber5" },
         { "Winning Number 6", "WinningNumber6" },
+        { "WinningNumber1", "WinningNumber1" },
+        { "WinningNumber2", "WinningNumber2" },
+        { "WinningNumber3", "WinningNumber3" },
+        { "WinningNumber4", "WinningNumber4" },
+        { "WinningNumber5", "WinningNumber5" },
+        { "WinningNumber6", "WinningNumber6" },
+        
         { "Bonus Number", "BonusNumber" },
+        { "BonusNumber", "BonusNumber" },
         { "Powerball", "Powerball" },
         { "From Last", "FromLast" },
+        { "FromLast", "FromLast" },
         
-        // Statistical interval mappings
+        // Statistical interval mappings - support multiple formats
+        { "1-10", "OneToTen" },
         { "1-Oct", "OneToTen" },
+        { "OneToTen", "OneToTen" },
+        { "11-20", "ElevenToTwenty" },
         { "Nov-20", "ElevenToTwenty" },
+        { "ElevenToTwenty", "ElevenToTwenty" },
         { "21-30", "TwentyOneToThirty" },
+        { "TwentyOneToThirty", "TwentyOneToThirty" },
+        { "ntyOneToThirty", "TwentyOneToThirty" }, // Handle the typo in the CSV
         { "31-40", "ThirtyOneToForty" },
+        { "ThirtyOneToForty", "ThirtyOneToForty" },
+        { "Low", "Low" },
+        { "High", "High" },
+        { "Odd", "Odd" },
+        { "Even", "Even" },
         
-        // Prize division mappings
+        // Prize division mappings - support both formats
         { "Division 1 Prize", "Division1Prize" },
+        { "Division1Prize", "Division1Prize" },
         { "Division 1 Winners", "Division1Winners" },
+        { "Division1Winners", "Division1Winners" },
         { "Division 2 Prize", "Division2Prize" },
+        { "Division2Prize", "Division2Prize" },
         { "Division 2 Winners", "Division2Winners" },
+        { "Division2Winners", "Division2Winners" },
         { "Division 3 Prize", "Division3Prize" },
+        { "Division3Prize", "Division3Prize" },
         { "Division 3 Winners", "Division3Winners" },
+        { "Division3Winners", "Division3Winners" },
         { "Division 4 Prize", "Division4Prize" },
+        { "Division4Prize", "Division4Prize" },
         { "Division 4 Winners", "Division4Winners" },
+        { "Division4Winners", "Division4Winners" },
         { "Division 5 Prize", "Division5Prize" },
+        { "Division5Prize", "Division5Prize" },
         { "Division 5 Winners", "Division5Winners" },
+        { "Division5Winners", "Division5Winners" },
         { "Division 6 Prize", "Division6Prize" },
-        { "Division 6 Winners", "Division6Winners" }
+        { "Division6Prize", "Division6Prize" },
+        { "Division 6 Winners", "Division6Winners" },
+        { "Division6Winners", "Division6Winners" },
+        { "Division 7 Prize", "Division7Prize" },
+        { "Division7Prize", "Division7Prize" },
+        { "Division 7 Winners", "Division7Winners" },
+        { "Division7Winners", "Division7Winners" }
     };
 
     public CsvParsingService(ILogger<CsvParsingService> logger)
@@ -61,40 +100,118 @@ public class CsvParsingService : ICsvParsingService
         
         using var reader = new StreamReader(csvStream);
         
-        // Read header line
-        var headerLine = await reader.ReadLineAsync();
-        if (string.IsNullOrEmpty(headerLine))
+        // Read all content first to handle potential formatting issues
+        var content = await reader.ReadToEndAsync();
+        if (string.IsNullOrEmpty(content))
         {
-            _logger.LogWarning("CSV file is empty or has no header");
+            _logger.LogWarning("CSV file is empty");
             return results;
         }
 
-        var headers = ParseCsvLine(headerLine);
-        var propertyMappings = CreatePropertyMappings(headers);
+        _logger.LogInformation("CSV content length: {Length} characters", content.Length);
         
-        var lineNumber = 1;
-        string? line;
+        // Split content into lines, handling different line endings and malformed headers
+        var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        _logger.LogInformation("Found {LineCount} lines in CSV", lines.Length);
         
-        while ((line = await reader.ReadLineAsync()) != null)
+        // Handle case where header and data might be concatenated in a single line
+        if (lines.Length == 1 && lines[0].Contains("Division7Prize"))
         {
-            lineNumber++;
+            var singleLine = lines[0];
             
+            // Look for the pattern where Division7Prize is followed immediately by a number (draw number)
+            var pattern = @"Division7Prize(\d+)";
+            var match = Regex.Match(singleLine, pattern);
+            
+            if (match.Success)
+            {
+                var splitPoint = match.Groups[1].Index; // Start of the draw number
+                var headerPart = singleLine.Substring(0, splitPoint);
+                var dataPart = singleLine.Substring(splitPoint);
+                
+                _logger.LogInformation("Detected concatenated header and data. Header ends at position {SplitPoint}", splitPoint);
+                _logger.LogInformation("Header part: {HeaderPart}", headerPart.Length > 100 ? headerPart.Substring(0, 100) + "..." : headerPart);
+                _logger.LogInformation("Data part: {DataPart}", dataPart.Length > 100 ? dataPart.Substring(0, 100) + "..." : dataPart);
+                
+                // Now split the data part into individual rows
+                // We'll use a simple approach: split by patterns that look like draw numbers followed by dates
+                var dataLines = new List<string>();
+                var drawPattern = @"(\d{4}),(\d{1,2}/\d{1,2}/\d{4})";
+                var matches = Regex.Matches(dataPart, drawPattern);
+                
+                if (matches.Count > 0)
+                {
+                    for (int i = 0; i < matches.Count; i++)
+                    {
+                        var currentMatch = matches[i];
+                        var startIndex = currentMatch.Index;
+                        var endIndex = i < matches.Count - 1 ? matches[i + 1].Index : dataPart.Length;
+                        
+                        var rowData = dataPart.Substring(startIndex, endIndex - startIndex).TrimEnd(',');
+                        if (!string.IsNullOrWhiteSpace(rowData))
+                        {
+                            dataLines.Add(rowData);
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: treat the entire data part as one line
+                    dataLines.Add(dataPart.TrimEnd(','));
+                }
+                
+                // Combine header and data lines
+                var allLines = new List<string> { headerPart };
+                allLines.AddRange(dataLines);
+                lines = allLines.ToArray();
+                
+                _logger.LogInformation("Fixed malformed CSV: split into header + {DataLineCount} data lines", dataLines.Count);
+            }
+        }
+        
+        if (lines.Length == 0)
+        {
+            _logger.LogWarning("No lines found in CSV file");
+            return results;
+        }
+
+        // First line should be headers
+        var headerLine = lines[0];
+        _logger.LogInformation("Header line: {HeaderLine}", headerLine.Length > 200 ? headerLine.Substring(0, 200) + "..." : headerLine);
+        
+        var headers = ParseCsvLine(headerLine);
+        _logger.LogInformation("Parsed {HeaderCount} headers: {Headers}", headers.Length, string.Join(", ", headers.Take(10)));
+        
+        var propertyMappings = CreatePropertyMappings(headers);
+        _logger.LogInformation("Created {MappingCount} property mappings", propertyMappings.Count);
+        
+        // Process data lines
+        for (int i = 1; i < lines.Length; i++)
+        {
+            var line = lines[i];
             if (string.IsNullOrWhiteSpace(line))
                 continue;
                 
             try
             {
                 var values = ParseCsvLine(line);
-                var lottoDraw = ParseLottoDrawFromValues(values, propertyMappings, lineNumber);
+                _logger.LogDebug("Line {LineNumber}: Parsed {ValueCount} values", i + 1, values.Length);
+                
+                var lottoDraw = ParseLottoDrawFromValues(values, propertyMappings, i + 1);
                 
                 if (lottoDraw != null)
                 {
                     results.Add(lottoDraw);
+                    _logger.LogDebug("Successfully parsed draw {DrawNumber}", lottoDraw.Draw);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to create LottoDraw from line {LineNumber}", i + 1);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to parse line {LineNumber}: {Line}", lineNumber, line);
+                _logger.LogWarning(ex, "Failed to parse line {LineNumber}: {Line}", i + 1, line.Length > 100 ? line.Substring(0, 100) + "..." : line);
                 // Continue processing other lines
             }
         }
@@ -142,11 +259,50 @@ public class CsvParsingService : ICsvParsingService
         {
             var header = headers[i].Trim();
             
+            // Special handling for the specific CSV format where winning numbers are "Winning Number 1,2,3,4,5,6"
+            if (header == "Winning Number 1")
+            {
+                mappings["WinningNumber1"] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property 'WinningNumber1' at index {Index}", header, i);
+                continue;
+            }
+            else if (header == "2" && i > 0 && headers[i-1] == "Winning Number 1")
+            {
+                mappings["WinningNumber2"] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property 'WinningNumber2' at index {Index}", header, i);
+                continue;
+            }
+            else if (header == "3" && i > 1 && headers[i-2] == "Winning Number 1")
+            {
+                mappings["WinningNumber3"] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property 'WinningNumber3' at index {Index}", header, i);
+                continue;
+            }
+            else if (header == "4" && i > 2 && headers[i-3] == "Winning Number 1")
+            {
+                mappings["WinningNumber4"] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property 'WinningNumber4' at index {Index}", header, i);
+                continue;
+            }
+            else if (header == "5" && i > 3 && headers[i-4] == "Winning Number 1")
+            {
+                mappings["WinningNumber5"] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property 'WinningNumber5' at index {Index}", header, i);
+                continue;
+            }
+            else if (header == "6" && i > 4 && headers[i-5] == "Winning Number 1")
+            {
+                mappings["WinningNumber6"] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property 'WinningNumber6' at index {Index}", header, i);
+                continue;
+            }
+            
             // Try direct mapping first
             if (HeaderMappings.ContainsKey(header))
             {
                 var propertyName = HeaderMappings[header];
                 mappings[propertyName] = i;
+                _logger.LogDebug("Mapped header '{Header}' to property '{PropertyName}' at index {Index}", header, propertyName, i);
                 continue;
             }
             
@@ -155,11 +311,16 @@ public class CsvParsingService : ICsvParsingService
             if (HasProperty<LottoDraw>(transformedHeader))
             {
                 mappings[transformedHeader] = i;
+                _logger.LogDebug("Transformed and mapped header '{Header}' to property '{PropertyName}' at index {Index}", header, transformedHeader, i);
                 continue;
             }
             
-            _logger.LogDebug("Unmapped CSV header: {Header}", header);
+            _logger.LogWarning("Unmapped CSV header: '{Header}' at index {Index}", header, i);
         }
+        
+        _logger.LogInformation("Created mappings for required fields: Draw={Draw}, Date={Date}, WinningNumber1={WN1}, BonusNumber={Bonus}, Powerball={PB}", 
+            mappings.ContainsKey("Draw"), mappings.ContainsKey("Date"), mappings.ContainsKey("WinningNumber1"), 
+            mappings.ContainsKey("BonusNumber"), mappings.ContainsKey("Powerball"));
         
         return mappings;
     }
@@ -244,15 +405,18 @@ public class CsvParsingService : ICsvParsingService
             return;
         }
 
+        // Clean the value - remove quotes and trim
+        var cleanValue = value.Trim('"').Trim();
+        
         var propertyType = property.PropertyType;
         var underlyingType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
 
         object? convertedValue = underlyingType.Name switch
         {
-            nameof(Int32) => int.Parse(value),
-            nameof(Decimal) => decimal.Parse(value, CultureInfo.InvariantCulture),
-            nameof(DateTime) => ParseDateTime(value),
-            nameof(String) => value,
+            nameof(Int32) => int.Parse(cleanValue),
+            nameof(Decimal) => decimal.Parse(cleanValue, CultureInfo.InvariantCulture),
+            nameof(DateTime) => ParseDateTime(cleanValue),
+            nameof(String) => cleanValue,
             _ => throw new NotSupportedException($"Property type {underlyingType.Name} is not supported")
         };
 
@@ -277,14 +441,16 @@ public class CsvParsingService : ICsvParsingService
         {
             if (DateTime.TryParseExact(value, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
             {
-                return result;
+                // Convert to UTC for PostgreSQL compatibility
+                return DateTime.SpecifyKind(result, DateTimeKind.Utc);
             }
         }
 
         // Fallback to general parsing
         if (DateTime.TryParse(value, out var fallbackResult))
         {
-            return fallbackResult;
+            // Convert to UTC for PostgreSQL compatibility
+            return DateTime.SpecifyKind(fallbackResult, DateTimeKind.Utc);
         }
 
         throw new FormatException($"Unable to parse date: {value}");
@@ -303,16 +469,26 @@ public class CsvParsingService : ICsvParsingService
 
     private bool ValidateRequiredFields(LottoDraw lottoDraw)
     {
+        var validationErrors = new List<string>();
+        
         // Check essential fields that must be present
-        return lottoDraw.Draw > 0 && 
-               lottoDraw.Date != default &&
-               lottoDraw.WinningNumber1 > 0 &&
-               lottoDraw.WinningNumber2 > 0 &&
-               lottoDraw.WinningNumber3 > 0 &&
-               lottoDraw.WinningNumber4 > 0 &&
-               lottoDraw.WinningNumber5 > 0 &&
-               lottoDraw.WinningNumber6 > 0 &&
-               lottoDraw.BonusNumber > 0 &&
-               lottoDraw.Powerball > 0;
+        if (lottoDraw.Draw <= 0) validationErrors.Add($"Draw number invalid: {lottoDraw.Draw}");
+        if (lottoDraw.Date == default) validationErrors.Add("Date is default/empty");
+        if (lottoDraw.WinningNumber1 <= 0) validationErrors.Add($"WinningNumber1 invalid: {lottoDraw.WinningNumber1}");
+        if (lottoDraw.WinningNumber2 <= 0) validationErrors.Add($"WinningNumber2 invalid: {lottoDraw.WinningNumber2}");
+        if (lottoDraw.WinningNumber3 <= 0) validationErrors.Add($"WinningNumber3 invalid: {lottoDraw.WinningNumber3}");
+        if (lottoDraw.WinningNumber4 <= 0) validationErrors.Add($"WinningNumber4 invalid: {lottoDraw.WinningNumber4}");
+        if (lottoDraw.WinningNumber5 <= 0) validationErrors.Add($"WinningNumber5 invalid: {lottoDraw.WinningNumber5}");
+        if (lottoDraw.WinningNumber6 <= 0) validationErrors.Add($"WinningNumber6 invalid: {lottoDraw.WinningNumber6}");
+        if (lottoDraw.BonusNumber <= 0) validationErrors.Add($"BonusNumber invalid: {lottoDraw.BonusNumber}");
+        if (lottoDraw.Powerball <= 0) validationErrors.Add($"Powerball invalid: {lottoDraw.Powerball}");
+        
+        if (validationErrors.Any())
+        {
+            _logger.LogWarning("Validation failed for draw {Draw}: {Errors}", lottoDraw.Draw, string.Join(", ", validationErrors));
+            return false;
+        }
+        
+        return true;
     }
 }

@@ -37,7 +37,7 @@ public class LottoDraw
     public int WinningNumber6 { get; set; }
     
     [Required]
-    [Range(1, 10)]
+    [Range(1, 40)]
     public int BonusNumber { get; set; }
     
     [Required]
@@ -51,6 +51,10 @@ public class LottoDraw
     public int? ElevenToTwenty { get; set; }
     public int? TwentyOneToThirty { get; set; }
     public int? ThirtyOneToForty { get; set; }
+    public int? Low { get; set; }
+    public int? High { get; set; }
+    public int? Odd { get; set; }
+    public int? Even { get; set; }
     
     // Prize division fields
     public decimal? Division1Prize { get; set; }
@@ -65,6 +69,8 @@ public class LottoDraw
     public int? Division5Winners { get; set; }
     public decimal? Division6Prize { get; set; }
     public int? Division6Winners { get; set; }
+    public decimal? Division7Prize { get; set; }
+    public int? Division7Winners { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

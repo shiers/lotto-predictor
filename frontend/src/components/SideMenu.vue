@@ -26,16 +26,22 @@
           </RouterLink>
         </li>
         <li>
-          <a href="#upload" @click="scrollToUpload" class="menu-link">
+          <RouterLink to="/draws" @click="closeMenu" class="menu-link">
+            <span class="menu-icon">🎲</span>
+            Draws
+          </RouterLink>
+        </li>
+        <li>
+          <a @click="openUploadDialog" class="menu-link">
             <span class="menu-icon">📁</span>
             Upload Data
           </a>
         </li>
         <li>
-          <a href="#latest" @click="scrollToLatest" class="menu-link">
-            <span class="menu-icon">🎲</span>
-            Latest Draw
-          </a>
+          <RouterLink to="/lookup" @click="closeMenu" class="menu-link">
+            <span class="menu-icon">🔍</span>
+            Number Lookup
+          </RouterLink>
         </li>
       </ul>
       
@@ -45,6 +51,19 @@
     </nav>
     
     <div v-if="isMenuOpen" class="menu-overlay" @click="closeMenu"></div>
+  </div>
+  
+  <!-- Upload Dialog -->
+  <div v-if="showUploadDialog" class="dialog-overlay" @click="showUploadDialog = false">
+    <div class="dialog-content" @click.stop>
+      <div class="dialog-header">
+        <h3>Upload Data</h3>
+        <button @click="showUploadDialog = false" class="dialog-close">×</button>
+      </div>
+      <div class="dialog-body">
+        <FileUpload @uploadSuccess="handleUploadSuccess" @uploadError="handleUploadError" />
+      </div>
+    </div>
   </div>
   
   <!-- Toast Notifications -->
@@ -73,6 +92,7 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import FileUpload from '@/components/FileUpload.vue'
 
 const appStore = useAppStore()
 
@@ -88,13 +108,13 @@ const closeMenu = () => {
   isMenuOpen.value = false
 }
 
+// Dialog state
+const showUploadDialog = ref(false)
+
 // Navigation helpers
-const scrollToUpload = () => {
+const openUploadDialog = () => {
   closeMenu()
-  const uploadElement = document.getElementById('upload')
-  if (uploadElement) {
-    uploadElement.scrollIntoView({ behavior: 'smooth' })
-  }
+  showUploadDialog.value = true
 }
 
 const scrollToLatest = () => {
@@ -103,6 +123,21 @@ const scrollToLatest = () => {
   if (latestElement) {
     latestElement.scrollIntoView({ behavior: 'smooth' })
   }
+}
+
+// Upload dialog handlers
+const handleUploadSuccess = (data: any) => {
+  showUploadDialog.value = false
+  appStore.addNotification({
+    type: 'success',
+    title: 'Data Uploaded Successfully',
+    message: `${data.fileName} uploaded with ${data.recordsAdded} new records`
+  })
+}
+
+const handleUploadError = (error: any) => {
+  console.error('Upload error:', error)
+  // Error notification is already handled by FileUpload component
 }
 
 // Toast notification helpers
@@ -377,6 +412,68 @@ const getToastIcon = (type: string): string => {
   transform: translateX(100%);
 }
 
+/* Upload Dialog */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dialog-content {
+  background: var(--color-background);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dialog-header h3 {
+  color: var(--color-heading);
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text);
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.dialog-close:hover {
+  background: var(--color-background-soft);
+}
+
+.dialog-body {
+  padding: 1.5rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .menu-nav {
@@ -392,6 +489,18 @@ const getToastIcon = (type: string): string => {
   
   .toast {
     min-width: auto;
+  }
+  
+  .dialog-overlay {
+    padding: 0.5rem;
+  }
+  
+  .dialog-header {
+    padding: 1rem;
+  }
+  
+  .dialog-body {
+    padding: 1rem;
   }
 }
 </style>

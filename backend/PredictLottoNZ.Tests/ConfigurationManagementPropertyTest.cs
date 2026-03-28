@@ -156,7 +156,7 @@ public static class ConfigurationManagementPropertyTest
         else
         {
             // Should use default value
-            var defaultUrl = "http://localhost:8001";
+            // var defaultUrl = ... // Removed unused variable
             // In actual implementation, this would be handled by the configuration logic
         }
         
@@ -319,7 +319,7 @@ public static class ConfigurationManagementPropertyTest
         var users = new[] { "postgres", "lotto_user", "admin", "app_user" };
         
         var host = hosts[random.Next(hosts.Length)];
-        var port = random.Next(5432, 5440);
+        var port = random.Next(5434, 5440);
         var database = databases[random.Next(databases.Length)];
         var user = users[random.Next(users.Length)];
         var password = GenerateRandomString(random, 8, 16);
@@ -371,3 +371,5 @@ public static class ConfigurationManagementPropertyTest
         public Dictionary<string, string> EnvironmentVariables { get; set; } = new();
     }
 }
+
+

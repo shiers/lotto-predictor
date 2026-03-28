@@ -3,7 +3,6 @@
     <div class="upload-area" :class="{ 'drag-over': isDragOver }" @drop="handleDrop" @dragover.prevent="handleDragOver" @dragleave="handleDragLeave">
       <div v-if="!isUploading" class="upload-content">
         <div class="upload-icon">📁</div>
-        <h3>Upload Lottery Data</h3>
         <p>Drag and drop your CSV, TXT, or PDF files here, or click to browse</p>
         <input ref="fileInput" type="file" multiple accept=".csv,.txt,.pdf" @change="handleFileSelect" class="file-input" />
         <button @click="triggerFileSelect" class="browse-button">Browse Files</button>
@@ -330,10 +329,7 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.upload-content h3 {
-  color: var(--color-heading);
-  margin: 0;
-}
+
 
 .upload-content p {
   color: var(--color-text);

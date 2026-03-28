@@ -26,8 +26,19 @@ public class DatabaseSeedingService : IDatabaseSeedingService
     {
         try
         {
+            // Check if NumberOccurrences need to be populated
+            var hasDraws = await _context.LottoDraws.AnyAsync();
+            var hasOccurrences = await _context.NumberOccurrences.AnyAsync();
+            
+            if (hasDraws && !hasOccurrences)
+            {
+                _logger.LogInformation("Populating NumberOccurrences from existing LottoDraws");
+                await PopulateNumberOccurrencesAsync();
+                return;
+            }
+            
             // Only seed if database is empty
-            if (await _context.LottoDraws.AnyAsync())
+            if (hasDraws)
             {
                 _logger.LogInformation("Database already contains data, skipping seeding");
                 return;
@@ -92,6 +103,54 @@ public class DatabaseSeedingService : IDatabaseSeedingService
             };
             
             await _context.LottoDraws.AddRangeAsync(sampleDraws);
+            await _context.SaveChangesAsync(); // Save draws first to get IDs
+            
+            // Create NumberOccurrence records for each draw
+            var numberOccurrences = new List<NumberOccurrence>();
+            
+            foreach (var draw in sampleDraws)
+            {
+                var numbers = new[] { draw.WinningNumber1, draw.WinningNumber2, draw.WinningNumber3, 
+                                    draw.WinningNumber4, draw.WinningNumber5, draw.WinningNumber6 };
+                
+                // Add main numbers
+                for (int i = 0; i < numbers.Length; i++)
+                {
+                    numberOccurrences.Add(new NumberOccurrence
+                    {
+                        DrawNumber = draw.Draw,
+                        DrawDate = draw.Date,
+                        Number = numbers[i],
+                        Position = i + 1,
+                        IsBonus = false,
+                        IsPowerball = false
+                    });
+                }
+                
+                // Add bonus number
+                numberOccurrences.Add(new NumberOccurrence
+                {
+                    DrawNumber = draw.Draw,
+                    DrawDate = draw.Date,
+                    Number = draw.BonusNumber,
+                    Position = 7,
+                    IsBonus = true,
+                    IsPowerball = false
+                });
+                
+                // Add powerball
+                numberOccurrences.Add(new NumberOccurrence
+                {
+                    DrawNumber = draw.Draw,
+                    DrawDate = draw.Date,
+                    Number = draw.Powerball,
+                    Position = 8,
+                    IsBonus = false,
+                    IsPowerball = true
+                });
+            }
+            
+            await _context.NumberOccurrences.AddRangeAsync(numberOccurrences);
             
             // Add some sample number combinations
             var sampleCombinations = new[]
@@ -105,12 +164,76 @@ public class DatabaseSeedingService : IDatabaseSeedingService
             
             await _context.SaveChangesAsync();
             
-            _logger.LogInformation("Database seeding completed successfully. Added {DrawCount} draws and {CombinationCount} combinations",
-                sampleDraws.Length, sampleCombinations.Length);
+            _logger.LogInformation("Database seeding completed successfully. Added {DrawCount} draws, {OccurrenceCount} number occurrences, and {CombinationCount} combinations",
+                sampleDraws.Length, numberOccurrences.Count, sampleCombinations.Length);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Database seeding failed");
+            throw;
+        }
+    }
+    
+    private async Task PopulateNumberOccurrencesAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Starting to populate NumberOccurrences from existing draws");
+            
+            var draws = await _context.LottoDraws.OrderBy(d => d.Draw).ToListAsync();
+            var numberOccurrences = new List<NumberOccurrence>();
+            
+            foreach (var draw in draws)
+            {
+                var numbers = new[] { draw.WinningNumber1, draw.WinningNumber2, draw.WinningNumber3, 
+                                    draw.WinningNumber4, draw.WinningNumber5, draw.WinningNumber6 };
+                
+                // Add main numbers
+                for (int i = 0; i < numbers.Length; i++)
+                {
+                    numberOccurrences.Add(new NumberOccurrence
+                    {
+                        DrawNumber = draw.Draw,
+                        DrawDate = draw.Date,
+                        Number = numbers[i],
+                        Position = i + 1,
+                        IsBonus = false,
+                        IsPowerball = false
+                    });
+                }
+                
+                // Add bonus number
+                numberOccurrences.Add(new NumberOccurrence
+                {
+                    DrawNumber = draw.Draw,
+                    DrawDate = draw.Date,
+                    Number = draw.BonusNumber,
+                    Position = 7,
+                    IsBonus = true,
+                    IsPowerball = false
+                });
+                
+                // Add powerball
+                numberOccurrences.Add(new NumberOccurrence
+                {
+                    DrawNumber = draw.Draw,
+                    DrawDate = draw.Date,
+                    Number = draw.Powerball,
+                    Position = 8,
+                    IsBonus = false,
+                    IsPowerball = true
+                });
+            }
+            
+            await _context.NumberOccurrences.AddRangeAsync(numberOccurrences);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Successfully populated {Count} NumberOccurrence records from {DrawCount} draws", 
+                numberOccurrences.Count, draws.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error populating NumberOccurrences");
             throw;
         }
     }

@@ -1,0 +1,106 @@
+name: Deploy to AWS ECS
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REGISTRY: 897458219603.dkr.ecr.ap-southeast-2.amazonaws.com
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/predict-lotto-backend:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/predict-lotto-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/predict-lotto-frontend:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/predict-lotto-frontend:latest
+          build-args: |
+            VUE_APP_API_BASE_URL=https://api.lottonz.dryad.ca
+
+      - name: Build and push predictor image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./predictor
+          file: ./predictor/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/predict-lotto-predictor:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/predict-lotto-predictor:latest
+
+      - name: Register backend task definition
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://.aws/task-definition-backend.json \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Register frontend task definition
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://.aws/task-definition-frontend.json \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Register predictor task definition
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://.aws/task-definition-predictor.json \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Deploy backend to ECS
+        run: |
+          aws ecs update-service \
+            --cluster predict-lotto-cluster \
+            --service predict-lotto-backend \
+            --task-definition predict-lotto-backend \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Deploy frontend to ECS
+        run: |
+          aws ecs update-service \
+            --cluster predict-lotto-cluster \
+            --service predict-lotto-frontend \
+            --task-definition predict-lotto-frontend \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Deploy predictor to ECS
+        run: |
+          aws ecs update-service \
+            --cluster predict-lotto-cluster \
+            --service predict-lotto-predictor \
+            --task-definition predict-lotto-predictor \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}

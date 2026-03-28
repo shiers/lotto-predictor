@@ -13,6 +13,21 @@ const router = createRouter({
       path: '/predictions',
       name: 'predictions',
       component: () => import('../views/PredictionsView.vue')
+    },
+    {
+      path: '/draws',
+      name: 'draws',
+      component: () => import('../views/DrawsView.vue')
+    },
+    {
+      path: '/lookup',
+      name: 'lookup',
+      component: () => import('../views/LookupView.vue')
+    },
+    {
+      path: '/history',
+      name: 'history',
+      component: () => import('../views/HistoryView.vue')
     }
   ]
 })

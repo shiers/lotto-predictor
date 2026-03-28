@@ -10,6 +10,7 @@ public interface IPredictionService
 {
     Task<IEnumerable<PredictionResult>> GeneratePredictionsAsync(int count);
     Task<IEnumerable<PredictionResult>> GetStoredPredictionsAsync(int count);
+    Task<PaginatedResponse<PredictionResult>> GetStoredPredictionsPaginatedAsync(PredictionPaginationRequest request);
     Task StorePredictionsAsync(IEnumerable<PredictionResult> predictions);
 }
 
@@ -115,12 +116,142 @@ public class PredictionService : IPredictionService
             
         _logger.LogInformation("Retrieving {Count} stored predictions", count);
         
-        var predictions = await _context.Predictions
-            .OrderByDescending(p => p.CreatedAt)
-            .Take(count)
-            .ToListAsync();
+        try
+        {
+            var predictions = await _context.Predictions
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(count)
+                .ToListAsync();
+                
+            return predictions.Select(PredictionResult.FromEntity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve stored predictions from database");
+            // Return empty list if database query fails
+            return new List<PredictionResult>();
+        }
+    }
+    
+    public async Task<PaginatedResponse<PredictionResult>> GetStoredPredictionsPaginatedAsync(PredictionPaginationRequest request)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
             
-        return predictions.Select(PredictionResult.FromEntity);
+        _logger.LogInformation("Retrieving paginated stored predictions - Page: {Page}, PageSize: {PageSize}", 
+            request.Page, request.PageSize);
+        
+        try
+        {
+            var query = _context.Predictions.AsQueryable();
+            
+            // Apply filters
+            if (!string.IsNullOrEmpty(request.Source))
+            {
+                query = query.Where(p => p.Source.Contains(request.Source));
+            }
+            
+            if (request.StartDate.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt >= request.StartDate.Value);
+            }
+            
+            if (request.EndDate.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt <= request.EndDate.Value);
+            }
+            
+            if (request.TargetDrawDate.HasValue)
+            {
+                query = query.Where(p => p.TargetDrawDate.HasValue && 
+                    p.TargetDrawDate.Value.Date == request.TargetDrawDate.Value.Date);
+            }
+            
+            if (request.MinConfidenceScore.HasValue)
+            {
+                query = query.Where(p => p.ConfidenceScore.HasValue && 
+                    p.ConfidenceScore.Value >= request.MinConfidenceScore.Value);
+            }
+            
+            if (request.MaxConfidenceScore.HasValue)
+            {
+                query = query.Where(p => p.ConfidenceScore.HasValue && 
+                    p.ConfidenceScore.Value <= request.MaxConfidenceScore.Value);
+            }
+            
+            if (request.HasReasoningExplanation.HasValue)
+            {
+                if (request.HasReasoningExplanation.Value)
+                {
+                    query = query.Where(p => !string.IsNullOrEmpty(p.ReasoningExplanation));
+                }
+                else
+                {
+                    query = query.Where(p => string.IsNullOrEmpty(p.ReasoningExplanation));
+                }
+            }
+            
+            // Apply sorting
+            if (!string.IsNullOrEmpty(request.SortBy))
+            {
+                query = request.SortBy.ToLowerInvariant() switch
+                {
+                    "createdat" => request.IsDescending 
+                        ? query.OrderByDescending(p => p.CreatedAt)
+                        : query.OrderBy(p => p.CreatedAt),
+                    "source" => request.IsDescending 
+                        ? query.OrderByDescending(p => p.Source)
+                        : query.OrderBy(p => p.Source),
+                    "score" => request.IsDescending 
+                        ? query.OrderByDescending(p => p.Score)
+                        : query.OrderBy(p => p.Score),
+                    "confidencescore" => request.IsDescending 
+                        ? query.OrderByDescending(p => p.ConfidenceScore)
+                        : query.OrderBy(p => p.ConfidenceScore),
+                    "targetdrawdate" => request.IsDescending 
+                        ? query.OrderByDescending(p => p.TargetDrawDate)
+                        : query.OrderBy(p => p.TargetDrawDate),
+                    _ => query.OrderByDescending(p => p.CreatedAt) // Default sort
+                };
+            }
+            else
+            {
+                // Default sort by creation date (newest first)
+                query = query.OrderByDescending(p => p.CreatedAt);
+            }
+            
+            // Get total count before pagination
+            var totalItems = await query.CountAsync();
+            
+            // Apply pagination
+            var predictions = await query
+                .Skip(request.Skip)
+                .Take(request.Take)
+                .ToListAsync();
+            
+            var predictionResults = predictions.Select(PredictionResult.FromEntity).ToList();
+            
+            return new PaginatedResponse<PredictionResult>
+            {
+                Items = predictionResults,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalItems = totalItems
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve paginated stored predictions from database");
+            
+            // Return empty paginated response on error
+            return new PaginatedResponse<PredictionResult>
+            {
+                Items = new List<PredictionResult>(),
+                Page = request.Page,
+                PageSize = request.PageSize,
+                TotalItems = 0
+            };
+        }
     }
     
     public async Task StorePredictionsAsync(IEnumerable<PredictionResult> predictions)
@@ -157,6 +288,7 @@ public class PredictionService : IPredictionService
             predictions = predictionList.Select(p => new
             {
                 numbers = p.Numbers,
+                powerball = p.Powerball,
                 score = p.Score,
                 source = p.Source,
                 createdAt = p.CreatedAt
@@ -178,6 +310,7 @@ public class PredictionService : IPredictionService
             Number4 = p.Numbers[3],
             Number5 = p.Numbers[4],
             Number6 = p.Numbers[5],
+            Powerball = p.Powerball,
             RawRequestPayload = requestJson,
             RawResponsePayload = responseJson
         }).ToList();

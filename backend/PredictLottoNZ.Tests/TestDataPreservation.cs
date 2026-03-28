@@ -4,7 +4,7 @@ namespace PredictLottoNZ.Tests;
 
 public class TestDataPreservation
 {
-    public static async Task Main(string[] args)
+    public static async Task RunTest(string[] args)
     {
         Console.WriteLine("Running Data Preservation Property Test...");
         try

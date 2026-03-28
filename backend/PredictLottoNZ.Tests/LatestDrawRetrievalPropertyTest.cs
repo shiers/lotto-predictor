@@ -289,3 +289,4 @@ public static class LatestDrawRetrievalPropertyTest
         public List<LottoDraw> ExistingDraws { get; set; } = new();
     }
 }
+

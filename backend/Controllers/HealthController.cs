@@ -4,8 +4,12 @@ using PredictLottoNZ.Data;
 
 namespace PredictLottoNZ.Controllers;
 
+/// <summary>
+/// Health check controller for monitoring system status and connectivity
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 public class HealthController : ControllerBase
 {
     private readonly LottoDbContext _context;
@@ -17,7 +21,15 @@ public class HealthController : ControllerBase
         _logger = logger;
     }
     
+    /// <summary>
+    /// Performs a comprehensive health check of the system
+    /// </summary>
+    /// <returns>System health status including database connectivity and statistics</returns>
+    /// <response code="200">System is healthy and operational</response>
+    /// <response code="503">System is unhealthy or experiencing issues</response>
     [HttpGet]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(object), 503)]
     public async Task<IActionResult> Get()
     {
         try

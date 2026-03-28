@@ -106,10 +106,12 @@ public class FastApiPredictionProvider : IPredictionProvider
                 {
                     // Convert the single prediction values to a 6-number combination
                     var numbers = GenerateNumbersFromPredictions(response);
+                    var powerball = GeneratePowerballFromPredictions(response);
                     
                     return new PredictionResult
                     {
                         Numbers = numbers,
+                        Powerball = powerball,
                         Score = response.BlendedPrediction,
                         Source = ProviderName,
                         CreatedAt = DateTime.UtcNow
@@ -248,6 +250,21 @@ public class FastApiPredictionProvider : IPredictionProvider
         }
         
         return numbers.OrderBy(n => n).ToArray();
+    }
+    
+    private int GeneratePowerballFromPredictions(FastApiPredictResponse response)
+    {
+        // Generate Powerball number (1-10) based on predictions
+        var random = new Random((int)(response.BlendedPrediction * 10000));
+        
+        // Use the blended prediction to influence Powerball selection
+        var baseValue = Math.Abs(response.BlendedPrediction) % 10;
+        var powerball = (int)baseValue + 1;
+        
+        // Add some randomness while keeping it in valid range
+        powerball = ((powerball + random.Next(1, 10)) % 10) + 1;
+        
+        return Math.Max(1, Math.Min(10, powerball));
     }
 }
 

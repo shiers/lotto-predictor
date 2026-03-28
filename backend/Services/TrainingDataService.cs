@@ -155,7 +155,8 @@ public class TrainingDataService : ITrainingDataService
                     { 3, d.Division3Prize },
                     { 4, d.Division4Prize },
                     { 5, d.Division5Prize },
-                    { 6, d.Division6Prize }
+                    { 6, d.Division6Prize },
+                    { 7, d.Division7Prize }
                 }
             }).ToList(),
             NumberCombinations = combinations.Select(c => new TrainingDataCombination

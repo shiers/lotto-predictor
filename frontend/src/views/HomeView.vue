@@ -23,9 +23,7 @@
         </div>
       </div>
       
-      <section id="upload" class="upload-section">
-        <FileUpload @uploadSuccess="handleUploadSuccess" @uploadError="handleUploadError" />
-      </section>
+
       
       <section class="latest-section">
         <LatestDraw ref="latestDrawRef" @drawLoaded="handleDrawLoaded" />
@@ -35,33 +33,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import FileUpload from '@/components/FileUpload.vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+
 import LatestDraw from '@/components/LatestDraw.vue'
 import { useAppStore } from '@/stores/app'
 
+const route = useRoute()
 const appStore = useAppStore()
 const latestDrawRef = ref()
 
-// Handle upload success
-const handleUploadSuccess = (data: any) => {
-  console.log('Upload successful:', data)
-  
-  // Refresh latest draw after successful upload
-  if (latestDrawRef.value) {
-    latestDrawRef.value.refreshLatestDraw()
-  }
-}
 
-// Handle upload error
-const handleUploadError = (error: { fileName: string; error: string }) => {
-  console.error('Upload error:', error)
-}
 
 // Handle draw loaded
 const handleDrawLoaded = (draw: any) => {
-  console.log('Latest draw loaded:', draw)
+  console.log('Draw loaded:', draw)
 }
+
+// Handle navigation to specific draw from query parameter
+const handleDrawNavigation = () => {
+  const drawNumber = route.query.draw
+  if (drawNumber && latestDrawRef.value) {
+    const drawNum = parseInt(drawNumber as string)
+    if (!isNaN(drawNum)) {
+      // Scroll to the latest draw section
+      setTimeout(() => {
+        const latestElement = document.getElementById('latest')
+        if (latestElement) {
+          latestElement.scrollIntoView({ behavior: 'smooth' })
+        }
+        // Navigate to the specific draw
+        latestDrawRef.value.goToDraw(drawNum)
+      }, 100)
+    }
+  }
+}
+
+// Watch for route changes
+watch(() => route.query.draw, handleDrawNavigation)
+
+// Handle navigation on mount
+onMounted(() => {
+  handleDrawNavigation()
+})
 </script>
 
 <style scoped>
@@ -114,9 +128,7 @@ const handleDrawLoaded = (draw: any) => {
   line-height: 1.5;
 }
 
-.upload-section {
-  margin-bottom: 4rem;
-}
+
 
 .latest-section {
   margin-bottom: 2rem;

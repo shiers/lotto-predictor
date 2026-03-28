@@ -224,7 +224,7 @@ NODE_ENV=production
 #### Performance
 ```env
 # Database connection pooling
-ConnectionStrings__DefaultConnection="Host=postgres;Port=5432;Database=predict_lotto_nz_prod;Username=postgres;Password=your_password;Pooling=true;MinPoolSize=5;MaxPoolSize=20"
+ConnectionStrings__DefaultConnection="Host=postgres;Port=5434;Database=predict_lotto_nz_prod;Username=postgres;Password=your_password;Pooling=true;MinPoolSize=5;MaxPoolSize=20"
 
 # Logging levels
 LOG_LEVEL=WARNING
@@ -374,7 +374,7 @@ services:
    sudo ufw allow 22/tcp    # SSH
    sudo ufw allow 80/tcp    # HTTP
    sudo ufw allow 443/tcp   # HTTPS
-   sudo ufw deny 5432/tcp   # Block direct database access
+   sudo ufw deny 5434/tcp   # Block direct database access
    sudo ufw enable
    ```
 
