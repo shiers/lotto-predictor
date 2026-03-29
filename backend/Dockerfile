@@ -20,10 +20,6 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Copy published app
 COPY --from=build /app/publish .
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
-USER appuser
-
 # Expose port
 EXPOSE 80
 
