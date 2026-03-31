@@ -8,8 +8,8 @@
     
     <nav class="menu-nav" :class="{ 'nav-open': isMenuOpen }">
       <div class="menu-header">
-        <h2>PredictLottoNZ</h2>
         <button @click="closeMenu" class="close-button">×</button>
+        <h2>LottoPredictor</h2>
       </div>
       
       <ul class="menu-items">
@@ -220,15 +220,15 @@ const getToastIcon = (type: string): string => {
 
 .menu-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1rem 1.5rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
 }
 
 .menu-header h2 {
   color: var(--color-heading);
-  margin: 0;
+  margin: 0.75rem 0 0;
   font-size: 1.25rem;
 }
 
@@ -244,6 +244,7 @@ const getToastIcon = (type: string): string => {
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: flex-end;
 }
 
 .close-button:hover {
