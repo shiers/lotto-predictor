@@ -120,3 +120,22 @@ Wait for status to become `available` before starting ECS services. The connecti
 `clustercfg.predict-lotto-redis.hvymco.apse2.cache.amazonaws.com:6379,ssl=true`
 
 Note: after recreation the endpoint will change — update the `REDIS_CONNECTION_STRING` environment variable in `.aws/task-definition-backend.json` and redeploy.
+
+## Restoring RDS from Snapshot
+
+The RDS instance was deleted with a final snapshot: `predict-lotto-db-final-snapshot`
+
+To restore when spinning back up:
+
+```powershell
+aws rds restore-db-instance-from-db-snapshot `
+  --db-instance-identifier predict-lotto-db `
+  --db-snapshot-identifier predict-lotto-db-final-snapshot `
+  --db-instance-class db.t3.micro `
+  --no-multi-az `
+  --publicly-accessible `
+  --vpc-security-group-ids sg-39560b5f `
+  --region ap-southeast-2
+```
+
+Wait for status `available` before starting ECS services. The endpoint will be the same hostname if you use the same instance identifier.
