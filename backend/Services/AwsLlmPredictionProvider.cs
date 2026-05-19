@@ -16,6 +16,12 @@ public class AwsLlmPredictionProvider : IPredictionProvider
         _trainingDataService = trainingDataService;
     }
     
+    public Task<bool> IsAvailableAsync()
+    {
+        // Not yet implemented - skip this provider entirely
+        return Task.FromResult(false);
+    }
+    
     public async Task<IEnumerable<PredictionResult>> PredictAsync(int count)
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

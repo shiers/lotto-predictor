@@ -23,6 +23,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:80
       REDIS_CONNECTION_STRING: "redis:6379"
+      FASTAPI_BASE_URL: http://predictor:8000
       GROQCLOUD_API_KEY: ${GROQCLOUD_API_KEY}
       GROQCLOUD_MODEL: ${GROQCLOUD_MODEL:-llama-3.3-70b-versatile}
       GROQCLOUD_BASE_URL: ${GROQCLOUD_BASE_URL:-https://api.groq.com/openai/v1}
@@ -30,6 +31,8 @@ services:
       GROQCLOUD_MAX_TOKENS: ${GROQCLOUD_MAX_TOKENS:-4096}
       GROQCLOUD_TIMEOUT_SECONDS: ${GROQCLOUD_TIMEOUT_SECONDS:-30}
       GROQCLOUD_MAX_RETRIES: ${GROQCLOUD_MAX_RETRIES:-3}
+    depends_on:
+      - predictor
     volumes:
       - ./backend:/app
       - /app/bin

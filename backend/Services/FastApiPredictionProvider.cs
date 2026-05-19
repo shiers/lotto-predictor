@@ -47,6 +47,22 @@ public class FastApiPredictionProvider : IPredictionProvider
         };
     }
     
+    public async Task<bool> IsAvailableAsync()
+    {
+        try
+        {
+            // Quick health check with a short timeout
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            var response = await _httpClient.GetAsync("/health", cts.Token);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            _logger.LogDebug("FastAPI service at {BaseUrl} is not reachable", _options.BaseUrl);
+            return false;
+        }
+    }
+    
     public async Task<IEnumerable<PredictionResult>> PredictAsync(int count)
     {
         _logger.LogInformation("Generating {Count} predictions using FastAPI service", count);

@@ -73,6 +73,22 @@ public class PredictionService : IPredictionService
                 continue;
             }
             
+            // Check if provider is available before attempting (avoids long timeouts)
+            try
+            {
+                var isAvailable = await provider.IsAvailableAsync();
+                if (!isAvailable)
+                {
+                    _logger.LogInformation("Provider {ProviderName} is not available, skipping", provider.ProviderName);
+                    continue;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to check availability for provider {ProviderName}, skipping", provider.ProviderName);
+                continue;
+            }
+            
             try
             {
                 _logger.LogInformation("Attempting to generate predictions using provider: {ProviderName}", provider.ProviderName);

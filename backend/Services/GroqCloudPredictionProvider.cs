@@ -51,6 +51,12 @@ public class GroqCloudPredictionProvider : IPredictionProvider
         };
     }
 
+    public Task<bool> IsAvailableAsync()
+    {
+        // Only available if API key is configured
+        return Task.FromResult(!string.IsNullOrEmpty(_options.ApiKey));
+    }
+
     public async Task<IEnumerable<PredictionResult>> PredictAsync(int count)
     {
         if (count <= 0)

@@ -51,6 +51,7 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-predict_lotto_nz};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-password}"
       REDIS_CONNECTION_STRING: "redis:6379"
       PredictorService__BaseUrl: ${PREDICTOR_SERVICE_URL:-http://predictor:8000}
+      FASTAPI_BASE_URL: ${PREDICTOR_SERVICE_URL:-http://predictor:8000}
       AWS__Region: ${AWS_REGION:-ap-southeast-2}
       AWS__AccessKeyId: ${AWS_ACCESS_KEY_ID}
       AWS__SecretAccessKey: ${AWS_SECRET_ACCESS_KEY}

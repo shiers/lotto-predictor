@@ -1,6 +1,6 @@
 # Development Dockerfile with hot reload
 FROM mcr.microsoft.com/dotnet/sdk:8.0
-WORKDIR /src
+WORKDIR /app
 
 # Workaround for transient TLS/SSL issues during dotnet restore in Docker
 ENV DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0 \
@@ -25,5 +25,6 @@ COPY . ./
 EXPOSE 80
 EXPOSE 443
 
-# Run with hot reload
+# Run with hot reload - use polling for file watcher in Docker
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 CMD ["dotnet", "watch", "run", "--urls", "http://0.0.0.0:80"]
