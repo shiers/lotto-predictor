@@ -1,6 +1,6 @@
-# PredictLottoNZ Frontend
+# LottoLens Frontend
 
-Vue.js frontend application for the PredictLottoNZ lottery prediction system.
+Vue.js frontend application for the LottoLens lottery analysis system.
 
 ## Features
 

@@ -42,9 +42,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() 
     { 
-        Title = "PredictLottoNZ API", 
+        Title = "LottoLens API", 
         Version = "v1",
-        Description = "API for New Zealand Lotto prediction and analysis system",
+        Description = "API for New Zealand Lotto analysis and prediction platform",
         Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {
             Name = "PredictLottoNZ Team",
@@ -243,9 +243,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "PredictLottoNZ API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LottoLens API v1");
         c.RoutePrefix = "swagger"; // Access via /swagger
-        c.DocumentTitle = "PredictLottoNZ API Documentation";
+        c.DocumentTitle = "LottoLens API Documentation";
         c.DefaultModelsExpandDepth(-1); // Hide models section by default
         c.DisplayRequestDuration();
         c.EnableTryItOutByDefault();
@@ -334,7 +334,7 @@ app.MapGet("/", (IWebHostEnvironment env) =>
     {
         return Results.Ok(new 
         { 
-            name = "PredictLottoNZ API",
+            name = "LottoLens API",
             version = "v1",
             status = "running",
             environment = env.EnvironmentName,

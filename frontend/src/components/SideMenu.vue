@@ -9,7 +9,7 @@
     <nav class="menu-nav" :class="{ 'nav-open': isMenuOpen }">
       <div class="menu-header">
         <button @click="closeMenu" class="close-button">×</button>
-        <h2>LottoPredictor</h2>
+        <h2>LottoLens</h2>
       </div>
       
       <ul class="menu-items">

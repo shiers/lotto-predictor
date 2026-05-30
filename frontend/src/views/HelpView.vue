@@ -2,11 +2,11 @@
   <main>
     <div class="help">
       <h1>❓ Help Guide</h1>
-      <p>How to use LottoPredictor NZ</p>
+      <p>How to use LottoLens</p>
 
       <div class="help-section">
         <h2>Overview</h2>
-        <p>LottoPredictor is an AI-powered tool that analyses historical NZ Lotto Powerball data to generate statistically-informed number predictions. It uses gap analysis, sum constraints, pair co-occurrence, and multi-line coverage optimisation to produce coordinated ticket lines.</p>
+        <p>LottoLens is an AI-powered tool that analyses historical NZ Lotto Powerball data to generate statistically-informed number predictions. It uses gap analysis, sum constraints, pair co-occurrence, and multi-line coverage optimisation to produce coordinated ticket lines.</p>
         <div class="disclaimer">
           <strong>⚠️ Disclaimer:</strong> NZ Lotto draws are mechanically random (air-mix machines, audited). No system can guarantee wins. This tool optimises number selection based on statistical patterns, but each draw is an independent event.
         </div>

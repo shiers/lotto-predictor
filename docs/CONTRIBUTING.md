@@ -1,6 +1,6 @@
-# Contributing to PredictLottoNZ
+# Contributing to LottoLens
 
-Thank you for your interest in contributing to PredictLottoNZ! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to LottoLens! This document provides guidelines and information for contributors.
 
 ## 🚀 Getting Started
 
@@ -238,4 +238,4 @@ Before submitting a pull request:
 - Use discussions for general questions
 - Tag maintainers for urgent issues
 
-Thank you for contributing to PredictLottoNZ! 🎉
+Thank you for contributing to LottoLens! 🎉

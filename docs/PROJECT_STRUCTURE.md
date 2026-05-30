@@ -1,4 +1,4 @@
-# PredictLottoNZ Project Structure
+# LottoLens Project Structure
 
 ## Overview
 

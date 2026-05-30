@@ -1,10 +1,10 @@
-# PredictLottoNZ
+# LottoLens
 
 A comprehensive full-stack web application for analyzing historical New Zealand lottery data and generating intelligent predictions using statistical analysis, machine learning, and AI-powered predictions with multi-line coverage optimisation.
 
 ## 🏗️ Architecture
 
-PredictLottoNZ employs a microservices architecture with five main components:
+LottoLens employs a microservices architecture with five main components:
 
 - **Frontend**: Vue.js 3 single-page application with TypeScript
 - **Backend**: .NET 8 Web API with Entity Framework Core

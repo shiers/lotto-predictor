@@ -79,7 +79,7 @@
 
 /* Custom footer */
 .swagger-ui .info::after {
-    content: "🎲 PredictLottoNZ API - Empowering lottery predictions with advanced analytics";
+    content: "🎲 LottoLens API - Lottery analysis powered by statistical intelligence";
     display: block;
     margin-top: 20px;
     padding: 15px;

@@ -2,7 +2,7 @@
   <main>
     <div class="home">
       <div class="hero-section">
-        <h1>LottoPredictor</h1>
+        <h1>LottoLens</h1>
         <p>Upload historical lottery data and generate predictions using multiple algorithms.</p>
       </div>
       
