@@ -60,6 +60,7 @@
       <div class="help-section">
         <h2>📁 Upload Data</h2>
         <p>Import draw data from CSV files (Powerball_NZ.csv format). This updates the historical database that feeds the prediction engine.</p>
+        <p>Latest CSVs can be downloaded from: <a href="https://en.lottolyzer.com/history/new-zealand/powerball-nz/page/1/per-page/50/summary-view" target="_blank" rel="noopener">Lottolyzer - Powerball NZ History</a> (click the CSV icon in the toolbar).</p>
       </div>
 
       <div class="help-section">
