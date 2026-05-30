@@ -55,6 +55,12 @@
             Number Lookup
           </RouterLink>
         </li>
+        <li>
+          <RouterLink to="/help" @click="closeMenu" class="menu-link">
+            <span class="menu-icon">❓</span>
+            Help Guide
+          </RouterLink>
+        </li>
       </ul>
       
       <div class="menu-footer">
