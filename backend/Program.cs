@@ -168,6 +168,7 @@ builder.Services.AddScoped<ITrainingDataService, TrainingDataService>();
 // Register accuracy analysis and score update services
 builder.Services.AddScoped<IAccuracyAnalysisService, AccuracyAnalysisService>();
 builder.Services.AddScoped<IPredictionScoreUpdateService, PredictionScoreUpdateService>();
+builder.Services.AddScoped<IBacktestService, BacktestService>();
 
 // Register prediction matching service
 builder.Services.AddScoped<IPredictionMatchingService, PredictionMatchingService>();
