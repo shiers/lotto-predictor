@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace PredictLottoNZ.Models;
 
@@ -68,5 +69,6 @@ public class PurchasedTicketLine
 
     // Navigation
     [ForeignKey("TicketId")]
+    [JsonIgnore]
     public PurchasedTicket? Ticket { get; set; }
 }

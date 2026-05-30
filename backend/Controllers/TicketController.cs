@@ -33,7 +33,7 @@ public class TicketController : ControllerBase
         var ticket = new PurchasedTicket
         {
             DrawNumber = request.DrawNumber,
-            DrawDate = request.DrawDate,
+            DrawDate = request.DrawDate.HasValue ? DateTime.SpecifyKind(request.DrawDate.Value, DateTimeKind.Utc) : null,
             TicketNumber = request.TicketNumber,
             Cost = request.Cost ?? 1.50m * request.Lines.Count,
             Source = request.Source ?? "Manual"
