@@ -22,6 +22,8 @@ public class LottoDbContext : DbContext
     public DbSet<ModelVersion> ModelVersions { get; set; } = null!;
     public DbSet<PredictionAccuracy> PredictionAccuracies { get; set; } = null!;
     public DbSet<PredictionScoreHistory> PredictionScoreHistories { get; set; } = null!;
+    public DbSet<PurchasedTicket> PurchasedTickets { get; set; } = null!;
+    public DbSet<PurchasedTicketLine> PurchasedTicketLines { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -173,6 +175,25 @@ public class LottoDbContext : DbContext
                   
             entity.HasIndex(e => new { e.Number, e.DrawDate })
                   .HasDatabaseName("IX_NumberOccurrences_Number_DrawDate");
+        });
+
+        // Configure PurchasedTicket entity
+        modelBuilder.Entity<PurchasedTicket>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.DrawNumber).HasDatabaseName("IX_PurchasedTickets_DrawNumber");
+            entity.HasIndex(e => e.CreatedAt).HasDatabaseName("IX_PurchasedTickets_CreatedAt");
+            entity.Property(e => e.Cost).HasPrecision(10, 2);
+            entity.Property(e => e.Winnings).HasPrecision(10, 2);
+            entity.HasMany(e => e.Lines).WithOne(l => l.Ticket).HasForeignKey(l => l.TicketId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure PurchasedTicketLine entity
+        modelBuilder.Entity<PurchasedTicketLine>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TicketId).HasDatabaseName("IX_PurchasedTicketLines_TicketId");
+            entity.Property(e => e.Prize).HasPrecision(10, 2);
         });
     }
     
