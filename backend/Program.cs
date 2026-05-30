@@ -103,6 +103,7 @@ builder.Services.AddScoped<ICombinationService, CombinationService>();
 // Register frequency calculation and prediction services
 builder.Services.AddMemoryCache(); // Add memory cache for frequency caching
 builder.Services.AddScoped<IFrequencyCalculationService, FrequencyCalculationService>();
+builder.Services.AddScoped<IDrawStatisticsService, DrawStatisticsService>();
 
 // Configure Redis for distributed caching
 var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING") ?? "localhost:6379";

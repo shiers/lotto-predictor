@@ -24,6 +24,7 @@ public class GroqCloudPredictionProvider : IPredictionProvider
     private readonly GroqCloudPredictionProviderOptions _options;
     private readonly ILogger<GroqCloudPredictionProvider> _logger;
     private readonly LottoDbContext _context;
+    private readonly IDrawStatisticsService _statisticsService;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public string ProviderName => "GroqCloud";
@@ -33,12 +34,14 @@ public class GroqCloudPredictionProvider : IPredictionProvider
         HttpClient httpClient,
         IOptions<GroqCloudPredictionProviderOptions> options,
         ILogger<GroqCloudPredictionProvider> logger,
-        LottoDbContext context)
+        LottoDbContext context,
+        IDrawStatisticsService statisticsService)
     {
         _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
         _context = context;
+        _statisticsService = statisticsService;
 
         // Configure HTTP client
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.ApiKey}");
@@ -75,14 +78,24 @@ public class GroqCloudPredictionProvider : IPredictionProvider
             // Get historical data for context
             var historicalData = await GetRecentHistoricalDataAsync();
             
-            // Build the prediction prompt
-            var prompt = BuildPredictionPrompt(historicalData, count);
+            // Get statistical analysis for richer context
+            var gapAnalysis = await _statisticsService.GetNumberGapAnalysisAsync();
+            var sumStats = await _statisticsService.GetSumStatisticsAsync();
+            var pairAnalysis = await _statisticsService.GetTopPairAnalysisAsync(15);
+            var powerballAnalysis = await _statisticsService.GetPowerballAnalysisAsync();
+            var patternSummary = await _statisticsService.GetDrawPatternSummaryAsync();
+            
+            // Build the prediction prompt with full statistical context
+            var prompt = BuildEnhancedPredictionPrompt(historicalData, count, gapAnalysis, sumStats, pairAnalysis, powerballAnalysis, patternSummary);
             
             // Make request to GroqCloud
             var predictions = await CallGroqCloudApiAsync(prompt, count);
             
-            _logger.LogInformation("Successfully generated {Count} predictions using GroqCloud", predictions.Count());
-            return predictions;
+            // Validate predictions against statistical constraints
+            var validatedPredictions = ValidatePredictions(predictions, sumStats, count);
+            
+            _logger.LogInformation("Successfully generated {Count} predictions using GroqCloud", validatedPredictions.Count());
+            return validatedPredictions;
         }
         catch (ArgumentException)
         {
@@ -143,33 +156,116 @@ public class GroqCloudPredictionProvider : IPredictionProvider
         }
     }
 
-    private string BuildPredictionPrompt(List<LottoDrawDto> historicalData, int count)
+    private string BuildEnhancedPredictionPrompt(
+        List<LottoDrawDto> historicalData, int count,
+        NumberGapAnalysis gapAnalysis, SumStatistics sumStats,
+        PairAnalysis pairAnalysis, PowerballAnalysis powerballAnalysis,
+        DrawPatternSummary patternSummary)
     {
-        var systemPrompt = @"You are a professional statistician specializing in probability theory. You analyze historical lottery data to explain frequency, variance, and randomness.
+        var systemPrompt = @"You are an expert lottery analyst for New Zealand Lotto Powerball. You use statistical analysis to generate optimized number selections.
 
-Your task is to analyze New Zealand Lotto data and generate lottery predictions. The lottery uses 6 numbers from 1-40 plus a Powerball number from 1-10.
+Game rules:
+- 6 numbers drawn from 1-40 (main draw)
+- 1 Powerball drawn from 1-10 (separate machine)
+- Each draw is mechanically random (air-mix machines)
+- Draws are independent events
 
-Guidelines:
-- Use statistical analysis of historical patterns
-- Consider frequency distributions and trends
-- Apply probability theory principles
-- Provide confidence scores based on statistical evidence
-- Each prediction must contain exactly 6 unique numbers between 1-40 plus 1 Powerball number between 1-10
-- Format response as valid JSON only";
+Your strategy:
+- Use number gap analysis to identify numbers that are statistically overdue relative to their average gap
+- Ensure the sum of 6 numbers falls within the historically normal range
+- Balance odd/even and low/high distributions to match historical patterns
+- Avoid generating lines with too many consecutive numbers (rare in real draws)
+- When generating multiple lines, MAXIMIZE COVERAGE - spread numbers across lines so different winning combinations are captured
+- Each line should cover different regions of the number space
+- Powerball selections should be spread across different values for multi-line tickets
+
+Prize structure (optimize for expected value):
+- Division 7: Match 3 numbers = ~$16.50
+- Division 6: Match 3 + bonus = ~$40
+- Division 5: Match 4 numbers = ~$49-61
+- Division 4: Match 4 + bonus = ~$99-117
+- Division 3: Match 5 numbers = ~$600-1,900
+- Division 2: Match 5 + bonus = ~$15,000-47,000
+- Division 1: Match 6 numbers = $200K-$1M+
+
+Format response as valid JSON only.";
 
         var historicalDataJson = JsonSerializer.Serialize(historicalData.Take(10), _jsonOptions);
 
-        var userPrompt = $@"Based on the following historical New Zealand Lotto data, generate {count} lottery predictions:
+        // Build gap summary - top overdue numbers
+        var overdueMain = gapAnalysis.MainNumberGaps
+            .Where(g => g.Value > gapAnalysis.MainNumberAverageGaps.GetValueOrDefault(g.Key, 7))
+            .OrderByDescending(g => g.Value)
+            .Take(15)
+            .Select(g => $"{g.Key}(gap:{g.Value}, avg:{gapAnalysis.MainNumberAverageGaps[g.Key]:F1})")
+            .ToList();
 
-Historical Data (last 10 draws):
+        var overduePowerball = gapAnalysis.PowerballGaps
+            .OrderByDescending(g => g.Value)
+            .Take(5)
+            .Select(g => $"PB{g.Key}(gap:{g.Value})")
+            .ToList();
+
+        // Top co-occurring pairs
+        var topPairsStr = string.Join(", ", pairAnalysis.TopPairs.Take(10)
+            .Select(p => $"({p.Number1},{p.Number2})x{p.Count}"));
+
+        // Odd/even distribution
+        var oeDistStr = string.Join(", ", patternSummary.OddEvenDistribution
+            .OrderByDescending(d => d.Value)
+            .Take(4)
+            .Select(d => $"{d.Key}={d.Value}draws"));
+
+        // Low/high distribution
+        var lhDistStr = string.Join(", ", patternSummary.LowHighDistribution
+            .OrderByDescending(d => d.Value)
+            .Take(4)
+            .Select(d => $"{d.Key}={d.Value}draws"));
+
+        // Powerball frequency in last 20
+        var pbLast20 = string.Join(", ", powerballAnalysis.Last20Frequencies
+            .OrderByDescending(f => f.Value)
+            .Select(f => $"PB{f.Key}:{f.Value}"));
+
+        var userPrompt = $@"Generate {count} lottery predictions as a COORDINATED SET that maximizes coverage.
+
+=== STATISTICAL CONTEXT (from {gapAnalysis.TotalDrawsAnalyzed} historical draws) ===
+
+RECENT DRAWS (last 10):
 {historicalDataJson}
 
-Requirements:
+SUM CONSTRAINTS:
+- Historical mean sum: {sumStats.MeanSum:F1}, std dev: {sumStats.StdDeviation:F1}
+- Target range (P10-P90): {sumStats.P10Sum} to {sumStats.P90Sum}
+- Each line's 6 numbers should sum to between {sumStats.P10Sum} and {sumStats.P90Sum}
+
+OVERDUE NUMBERS (gap exceeds average):
+Main: {string.Join(", ", overdueMain)}
+Powerball: {string.Join(", ", overduePowerball)}
+
+PATTERN DISTRIBUTIONS (most common):
+- Odd/Even splits: {oeDistStr}
+- Low(1-20)/High(21-40) splits: {lhDistStr}
+- Average consecutive pairs per draw: {patternSummary.AvgConsecutivePairs:F2}
+- Average numbers repeated from previous draw: {patternSummary.AvgRepeatFromPrevious:F2}
+
+TOP CO-OCCURRING PAIRS: {topPairsStr}
+
+POWERBALL (last 20 draws): {pbLast20}
+
+=== MULTI-LINE OPTIMIZATION RULES ===
+- Spread numbers across lines: minimize overlap between lines
+- Each line should have a different odd/even balance
+- Use different Powerball values on each line
+- Cover different number ranges (some lines favor low, some high, some mixed)
+- Aim for each number 1-40 to appear at most once across all {count} lines (maximize unique coverage)
+
+=== REQUIREMENTS ===
 - Generate exactly {count} predictions
-- Each prediction must have exactly 6 unique numbers between 1-40 plus 1 Powerball number between 1-10
-- Include confidence score (0.0-1.0) for each prediction
-- Provide brief statistical reasoning for each prediction
-- Consider frequency patterns, gaps, and statistical trends for both main numbers and Powerball
+- Each prediction: 6 unique numbers (1-40) + 1 Powerball (1-10)
+- Sum of each line's 6 numbers must be between {sumStats.P10Sum} and {sumStats.P90Sum}
+- Include confidence score (0.0-1.0) and brief reasoning
+- Prioritize overdue numbers but maintain statistical balance
 
 Response format (JSON only):
 {{
@@ -178,7 +274,7 @@ Response format (JSON only):
             ""numbers"": [1, 2, 3, 4, 5, 6],
             ""powerball"": 7,
             ""confidence"": 0.85,
-            ""reasoning"": ""Statistical explanation""
+            ""reasoning"": ""Brief statistical explanation""
         }}
     ]
 }}";
@@ -195,6 +291,39 @@ Response format (JSON only):
             max_tokens = _options.MaxTokens,
             response_format = new { type = "json_object" }
         }, _jsonOptions);
+    }
+
+    private IEnumerable<PredictionResult> ValidatePredictions(IEnumerable<PredictionResult> predictions, SumStatistics sumStats, int requestedCount)
+    {
+        var validated = new List<PredictionResult>();
+
+        foreach (var prediction in predictions)
+        {
+            var sum = prediction.Numbers.Sum();
+
+            // Warn but don't reject if sum is outside P10-P90 range
+            if (sum < sumStats.P10Sum || sum > sumStats.P90Sum)
+            {
+                _logger.LogWarning("Prediction sum {Sum} is outside normal range ({P10}-{P90}), keeping but noting",
+                    sum, sumStats.P10Sum, sumStats.P90Sum);
+            }
+
+            validated.Add(prediction);
+        }
+
+        // Check multi-line coverage
+        if (validated.Count > 1)
+        {
+            var allNumbers = validated.SelectMany(p => p.Numbers).ToList();
+            var uniqueNumbers = allNumbers.Distinct().Count();
+            var totalNumbers = allNumbers.Count;
+            var coverageRatio = (double)uniqueNumbers / totalNumbers;
+
+            _logger.LogInformation("Multi-line coverage: {Unique}/{Total} unique numbers ({Coverage:P0})",
+                uniqueNumbers, totalNumbers, coverageRatio);
+        }
+
+        return validated;
     }
 
     private async Task<IEnumerable<PredictionResult>> CallGroqCloudApiAsync(string prompt, int count)
