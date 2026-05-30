@@ -22,6 +22,7 @@ import SideMenu from '@/components/SideMenu.vue'
 .main-content {
   flex: 1;
   padding-left: 0;
+  padding-top: 4rem;
   transition: padding-left 0.3s ease;
 }
 
