@@ -16,10 +16,10 @@
         <h2>🎯 Predictions</h2>
         <p>Generate AI-powered number predictions for your next ticket.</p>
         <ul>
-          <li><strong>Generate New</strong> — Creates predictions using the GroqCloud LLM with full statistical context (number gaps, sum ranges, pair analysis)</li>
-          <li><strong>Multi-line optimisation</strong> — When generating 4+ lines, the system spreads numbers across lines to maximise coverage while allowing strategic overlap for overdue numbers</li>
-          <li><strong>Confidence scores</strong> — Each prediction includes a confidence score (0-1) based on statistical evidence</li>
-          <li><strong>Reasoning</strong> — Each line explains why those numbers were chosen</li>
+          <li><strong>Generate New</strong> - Creates predictions using the GroqCloud LLM with full statistical context (number gaps, sum ranges, pair analysis)</li>
+          <li><strong>Multi-line optimisation</strong> - When generating 4+ lines, the system spreads numbers across lines to maximise coverage while allowing strategic overlap for overdue numbers</li>
+          <li><strong>Confidence scores</strong> - Each prediction includes a confidence score (0-1) based on statistical evidence</li>
+          <li><strong>Reasoning</strong> - Each line explains why those numbers were chosen</li>
         </ul>
         <div class="tip">
           💡 <strong>Tip:</strong> Generate 4 lines for a standard ticket, or 10 lines for maximum coverage.
@@ -30,11 +30,11 @@
         <h2>🎫 Ticket Tracker</h2>
         <p>Track your purchased tickets and measure performance over time.</p>
         <ul>
-          <li><strong>Add tickets</strong> — Enter your draw number and line numbers. The system auto-checks against draw results when available.</li>
-          <li><strong>Number highlighting</strong> — Blue circles = matched main numbers, Purple = bonus match, Gold = Powerball match</li>
-          <li><strong>Source badges</strong> — 🤖 Purple border = AI Predicted numbers, ✋ Green border = manually chosen numbers</li>
-          <li><strong>Performance summary</strong> — Tracks total spent, won, net return, ROI, and average matches per line</li>
-          <li><strong>Override winnings</strong> — If the calculated prize differs from your actual payout, the system supports manual correction</li>
+          <li><strong>Add tickets</strong> - Enter your draw number and line numbers. The system auto-checks against draw results when available.</li>
+          <li><strong>Number highlighting</strong> - Blue circles = matched main numbers, Purple = bonus match, Gold = Powerball match</li>
+          <li><strong>Source badges</strong> - 🤖 Purple border = AI Predicted numbers, ✋ Green border = manually chosen numbers</li>
+          <li><strong>Performance summary</strong> - Tracks total spent, won, net return, ROI, and average matches per line</li>
+          <li><strong>Override winnings</strong> - If the calculated prize differs from your actual payout, the system supports manual correction</li>
         </ul>
       </div>
 
@@ -42,10 +42,10 @@
         <h2>📈 Backtest</h2>
         <p>Compare the enhanced prediction strategy against random selection using historical data.</p>
         <ul>
-          <li><strong>Enhanced strategy</strong> — Uses gap analysis, sum constraints (P10-P90 range), odd/even balance, and coverage optimisation</li>
-          <li><strong>Random baseline</strong> — Pure random number generation for comparison</li>
-          <li><strong>Metrics tracked</strong> — Average matches/line, winning lines, total winnings, ROI, unique coverage, powerball spread</li>
-          <li><strong>Match distribution</strong> — Visual bar chart showing how many lines hit 0, 1, 2, 3, 4+ matches</li>
+          <li><strong>Enhanced strategy</strong> - Uses gap analysis, sum constraints (P10-P90 range), odd/even balance, and coverage optimisation</li>
+          <li><strong>Random baseline</strong> - Pure random number generation for comparison</li>
+          <li><strong>Metrics tracked</strong> - Average matches/line, winning lines, total winnings, ROI, unique coverage, powerball spread</li>
+          <li><strong>Match distribution</strong> - Visual bar chart showing how many lines hit 0, 1, 2, 3, 4+ matches</li>
         </ul>
         <div class="tip">
           💡 <strong>Tip:</strong> Run with 100 draws for statistically meaningful results. The enhanced strategy shows +8-9% more matches per line on average.
