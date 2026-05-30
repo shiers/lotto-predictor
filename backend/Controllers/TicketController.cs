@@ -79,7 +79,7 @@ public class TicketController : ControllerBase
     /// Get all tickets, optionally filtered by draw number.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PurchasedTicket>>> GetTickets([FromQuery] int? drawNumber = null)
+    public async Task<ActionResult<IEnumerable<object>>> GetTickets([FromQuery] int? drawNumber = null)
     {
         var query = _context.PurchasedTickets
             .Include(t => t.Lines)
@@ -90,7 +90,45 @@ public class TicketController : ControllerBase
             query = query.Where(t => t.DrawNumber == drawNumber.Value);
 
         var tickets = await query.Take(50).ToListAsync();
-        return Ok(tickets);
+
+        // Enrich with draw data for number highlighting
+        var drawNumbers = tickets.Select(t => t.DrawNumber).Distinct().ToList();
+        var draws = await _context.LottoDraws
+            .Where(d => drawNumbers.Contains(d.Draw))
+            .ToDictionaryAsync(d => d.Draw);
+
+        var enrichedTickets = tickets.Select(t =>
+        {
+            var draw = draws.GetValueOrDefault(t.DrawNumber);
+            return new
+            {
+                t.Id, t.DrawNumber, t.DrawDate, t.TicketNumber, t.Cost, t.Winnings, t.IsChecked, t.Source, t.CreatedAt,
+                WinningNumbers = draw != null ? new[] { draw.WinningNumber1, draw.WinningNumber2, draw.WinningNumber3, draw.WinningNumber4, draw.WinningNumber5, draw.WinningNumber6 } : null,
+                BonusNumber = draw?.BonusNumber,
+                DrawPowerball = draw?.Powerball,
+                Lines = t.Lines.Select(l => new
+                {
+                    l.Id, l.TicketId, l.LineLabel, l.Number1, l.Number2, l.Number3, l.Number4, l.Number5, l.Number6,
+                    l.Powerball, l.MainMatches, l.BonusMatched, l.PowerballMatched, l.Division, l.Prize
+                })
+            };
+        });
+
+        return Ok(enrichedTickets);
+    }
+
+    /// <summary>
+    /// Update the actual winnings for a ticket (override calculated amount).
+    /// </summary>
+    [HttpPatch("{id}/winnings")]
+    public async Task<ActionResult> UpdateWinnings(int id, [FromBody] decimal actualWinnings)
+    {
+        var ticket = await _context.PurchasedTickets.FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null) return NotFound();
+
+        ticket.Winnings = actualWinnings;
+        await _context.SaveChangesAsync();
+        return Ok(new { message = $"Winnings updated to ${actualWinnings}" });
     }
 
     /// <summary>
@@ -180,7 +218,7 @@ public class TicketController : ControllerBase
             line.BonusMatched = bonusMatched;
             line.PowerballMatched = pbMatched;
 
-            var (division, prize) = DeterminePrize(mainMatches, bonusMatched);
+            var (division, prize) = DeterminePrize(mainMatches, bonusMatched, draw);
             line.Division = division;
             line.Prize = prize;
             totalWinnings += prize;
@@ -194,17 +232,18 @@ public class TicketController : ControllerBase
         _logger.LogInformation("Checked ticket {Id} for draw {Draw}: won ${Winnings}", ticket.Id, ticket.DrawNumber, totalWinnings);
     }
 
-    private (string division, decimal prize) DeterminePrize(int mainMatches, bool bonusMatched)
+    private (string division, decimal prize) DeterminePrize(int mainMatches, bool bonusMatched, Models.LottoDraw draw)
     {
+        // Use actual prize data from the draw record when available
         return mainMatches switch
         {
-            6 => ("Div1", 1_000_000m),
-            5 when bonusMatched => ("Div2", 25_000m),
-            5 => ("Div3", 1_000m),
-            4 when bonusMatched => ("Div4", 100m),
-            4 => ("Div5", 50m),
-            3 when bonusMatched => ("Div6", 40m),
-            3 => ("Div7", 16.50m),
+            6 => ("Div1", draw.Division1Prize ?? 1_000_000m),
+            5 when bonusMatched => ("Div2", draw.Division2Prize ?? 25_000m),
+            5 => ("Div3", draw.Division3Prize ?? 1_000m),
+            4 when bonusMatched => ("Div4", draw.Division4Prize ?? 100m),
+            4 => ("Div5", draw.Division5Prize ?? 50m),
+            3 when bonusMatched => ("Div6", draw.Division6Prize ?? 40m),
+            3 => ("Div7", draw.Division7Prize ?? 16.50m),
             _ => ("None", 0m)
         };
     }

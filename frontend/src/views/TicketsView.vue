@@ -83,6 +83,11 @@
           <div class="ticket-header">
             <span class="draw-badge">Draw #{{ ticket.drawNumber }}</span>
             <span class="ticket-date">{{ formatDate(ticket.drawDate) }}</span>
+            <span v-if="ticket.winningNumbers" class="winning-numbers">
+              Winning: <span v-for="n in ticket.winningNumbers" :key="n" class="win-num">{{ n }}</span>
+              <span class="bonus-num">+{{ ticket.bonusNumber }}</span>
+              <span class="pb-num">PB{{ ticket.drawPowerball }}</span>
+            </span>
             <span class="ticket-winnings" :class="{ won: ticket.winnings > 0 }">
               {{ ticket.winnings > 0 ? `Won $${ticket.winnings.toFixed(2)}` : 'No win' }}
             </span>
@@ -91,10 +96,14 @@
             <div v-for="line in ticket.lines" :key="line.id" class="ticket-line" :class="{ 'line-won': line.prize > 0 }">
               <span class="line-label-display">{{ line.lineLabel }}</span>
               <span v-for="num in [line.number1, line.number2, line.number3, line.number4, line.number5, line.number6]"
-                    :key="num" class="number-ball" :class="{ matched: isMatched(line, num) }">
+                    :key="num" class="number-ball"
+                    :class="{
+                      'matched-main': ticket.winningNumbers && ticket.winningNumbers.includes(num),
+                      'matched-bonus': ticket.bonusNumber === num && !(ticket.winningNumbers && ticket.winningNumbers.includes(num))
+                    }">
                 {{ num }}
               </span>
-              <span class="powerball-ball" :class="{ matched: line.powerballMatched }">{{ line.powerball }}</span>
+              <span class="powerball-ball" :class="{ 'matched-pb': line.powerballMatched }">{{ line.powerball }}</span>
               <span v-if="line.division && line.division !== 'None'" class="division-badge">{{ line.division }} (${{ line.prize }})</span>
               <span v-if="line.mainMatches !== null" class="match-count">{{ line.mainMatches }}/6</span>
             </div>
@@ -186,12 +195,6 @@ const loadSummary = async () => {
   }
 }
 
-const isMatched = (line: any, num: number): boolean => {
-  // We don't have the winning numbers in the line data directly,
-  // but we can infer from mainMatches > 0 that some matched
-  return false // Would need draw data to highlight specific matches
-}
-
 const formatDate = (date: string) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -246,6 +249,10 @@ onMounted(() => {
 .ticket-date { font-size: 0.85rem; color: var(--color-text); opacity: 0.7; }
 .ticket-winnings { margin-left: auto; font-weight: bold; }
 .ticket-winnings.won { color: #28a745; }
+.winning-numbers { font-size: 0.8rem; display: flex; align-items: center; gap: 0.2rem; }
+.win-num { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #2196F3; color: white; font-size: 0.7rem; font-weight: 500; }
+.bonus-num { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #9C27B0; color: white; font-size: 0.65rem; font-weight: 500; padding: 0 0.2rem; }
+.pb-num { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; height: 1.5rem; border-radius: 10px; background: #f0ad4e; color: white; font-size: 0.65rem; font-weight: 500; padding: 0 0.3rem; }
 
 .ticket-lines { display: flex; flex-direction: column; gap: 0.5rem; }
 .ticket-line { display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.5rem; border-radius: 6px; }
@@ -253,9 +260,10 @@ onMounted(() => {
 .line-label-display { font-weight: bold; width: 1.5rem; font-size: 0.85rem; }
 
 .number-ball { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-background-soft); border: 1px solid var(--color-border); font-size: 0.8rem; font-weight: 500; }
-.number-ball.matched { background: #28a745; color: white; border-color: #28a745; }
+.number-ball.matched-main { background: #2196F3; color: white; border-color: #1976D2; }
+.number-ball.matched-bonus { background: #9C27B0; color: white; border-color: #7B1FA2; }
 .powerball-ball { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; background: #fff3cd; border: 1px solid #f0ad4e; font-size: 0.8rem; font-weight: 500; color: #856404; margin-left: 0.5rem; }
-.powerball-ball.matched { background: #f0ad4e; color: white; }
+.powerball-ball.matched-pb { background: #f0ad4e; color: white; border-color: #e09900; }
 .division-badge { background: #28a745; color: white; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; margin-left: 0.5rem; }
 .match-count { font-size: 0.75rem; color: var(--color-text); opacity: 0.6; margin-left: auto; }
 
