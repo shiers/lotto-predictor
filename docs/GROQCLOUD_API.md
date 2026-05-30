@@ -56,7 +56,7 @@ Generate lottery predictions using GroqCloud's high-performance inference.
 
 **Parameters:**
 - `count` (integer, 1-10): Number of predictions to generate
-- `model` (string, optional): Specific GroqCloud model (`llama-3.1-70b-versatile`, `mixtral-8x7b-32768`, `gemma2-9b-it`)
+- `model` (string, optional): Specific GroqCloud model (`llama-3.3-70b-versatile`, `mixtral-8x7b-32768`, `gemma2-9b-it`)
 - `temperature` (decimal, 0.0-2.0, optional): Creativity level for predictions
 - `maxTokens` (integer, optional): Maximum tokens for response generation
 - `includeReasoning` (boolean, optional): Include detailed AI reasoning
@@ -65,7 +65,7 @@ Generate lottery predictions using GroqCloud's high-performance inference.
 
 **Example Request:**
 ```http
-GET /api/predictions/groqcloud?count=3&model=llama-3.1-70b-versatile&temperature=0.7&includeReasoning=true&streamResponse=false
+GET /api/predictions/groqcloud?count=3&model=llama-3.3-70b-versatile&temperature=0.7&includeReasoning=true&streamResponse=false
 ```
 
 **Example Response:**
@@ -74,7 +74,7 @@ GET /api/predictions/groqcloud?count=3&model=llama-3.1-70b-versatile&temperature
   "predictions": [
     {
       "numbers": [8, 15, 23, 31, 37, 44],
-      "source": "GroqCloud (Llama-3.1-70B-Versatile)",
+      "source": "GroqCloud (llama-3.3-70b-versatile)",
       "confidenceScore": 0.89,
       "reasoningExplanation": "Analysis of 500+ historical draws reveals strong correlation patterns. Numbers 8, 15, and 31 show 34% higher frequency in December draws. The combination balances high/low distribution (3:3) and maintains optimal sum range (158) based on statistical modeling.",
       "keyFactors": [
@@ -86,7 +86,7 @@ GET /api/predictions/groqcloud?count=3&model=llama-3.1-70b-versatile&temperature
       "targetDrawDate": "2024-12-15T00:00:00Z",
       "createdAt": "2024-12-12T10:30:00Z",
       "providerMetadata": {
-        "modelName": "llama-3.1-70b-versatile",
+        "modelName": "llama-3.3-70b-versatile",
         "inferenceTimeMs": 245,
         "tokensGenerated": 156,
         "requestId": "groq_req_abc123",
@@ -117,13 +117,13 @@ Get real-time streaming predictions for immediate feedback.
 
 **Example Request:**
 ```bash
-curl -X GET "http://localhost:5000/api/predictions/groqcloud/stream?count=1&model=llama-3.1-70b-versatile" \
+curl -X GET "http://localhost:5000/api/predictions/groqcloud/stream?count=1&model=llama-3.3-70b-versatile" \
   -H "Accept: text/event-stream"
 ```
 
 **Example Streaming Response:**
 ```
-data: {"type": "start", "requestId": "groq_stream_123", "model": "llama-3.1-70b-versatile"}
+data: {"type": "start", "requestId": "groq_stream_123", "model": "llama-3.3-70b-versatile"}
 
 data: {"type": "reasoning", "content": "Analyzing historical patterns for December draws..."}
 
@@ -149,7 +149,7 @@ Generate multiple prediction sets efficiently with batch processing.
     {
       "id": "batch_1",
       "count": 5,
-      "model": "llama-3.1-70b-versatile",
+      "model": "llama-3.3-70b-versatile",
       "temperature": 0.7,
       "includeReasoning": true
     },
@@ -207,7 +207,7 @@ Compare predictions across different GroqCloud models.
 {
   "count": 3,
   "models": [
-    "llama-3.1-70b-versatile",
+    "llama-3.3-70b-versatile",
     "mixtral-8x7b-32768", 
     "gemma2-9b-it"
   ],
@@ -221,7 +221,7 @@ Compare predictions across different GroqCloud models.
 ```json
 {
   "modelPredictions": {
-    "llama-3.1-70b-versatile": {
+    "llama-3.3-70b-versatile": {
       "predictions": [...],
       "averageConfidence": 0.89,
       "inferenceTimeMs": 245,
@@ -243,14 +243,14 @@ Compare predictions across different GroqCloud models.
   "consensus": {
     "commonNumbers": [15, 23, 31],
     "diversityScore": 0.72,
-    "recommendedModel": "llama-3.1-70b-versatile",
+    "recommendedModel": "llama-3.3-70b-versatile",
     "confidenceWeightedAverage": 0.85
   },
   "performanceMetrics": {
     "fastestModel": "gemma2-9b-it",
-    "mostConfidentModel": "llama-3.1-70b-versatile",
+    "mostConfidentModel": "llama-3.3-70b-versatile",
     "mostCostEffective": "gemma2-9b-it",
-    "bestAccuracyHistorical": "llama-3.1-70b-versatile"
+    "bestAccuracyHistorical": "llama-3.3-70b-versatile"
   }
 }
 ```
@@ -268,7 +268,7 @@ Get list of available GroqCloud models and their capabilities.
 {
   "models": [
     {
-      "id": "llama-3.1-70b-versatile",
+      "id": "llama-3.3-70b-versatile",
       "name": "Llama 3.1 70B Versatile",
       "description": "Meta's flagship model with exceptional reasoning capabilities",
       "contextLength": 131072,
@@ -326,8 +326,8 @@ Get list of available GroqCloud models and their capabilities.
       ]
     }
   ],
-  "defaultModel": "llama-3.1-70b-versatile",
-  "recommendedModel": "llama-3.1-70b-versatile"
+  "defaultModel": "llama-3.3-70b-versatile",
+  "recommendedModel": "llama-3.3-70b-versatile"
 }
 ```
 
@@ -346,7 +346,7 @@ Get detailed performance analytics for GroqCloud models.
 {
   "timeframe": "7d",
   "modelAnalytics": {
-    "llama-3.1-70b-versatile": {
+    "llama-3.3-70b-versatile": {
       "totalRequests": 1250,
       "successRate": 0.998,
       "averageInferenceTimeMs": 245,
@@ -384,10 +384,10 @@ Get detailed performance analytics for GroqCloud models.
     }
   },
   "summary": {
-    "bestPerformingModel": "llama-3.1-70b-versatile",
+    "bestPerformingModel": "llama-3.3-70b-versatile",
     "mostCostEffective": "gemma2-9b-it",
     "fastestModel": "gemma2-9b-it",
-    "recommendedForAccuracy": "llama-3.1-70b-versatile",
+    "recommendedForAccuracy": "llama-3.3-70b-versatile",
     "recommendedForSpeed": "gemma2-9b-it",
     "recommendedForCost": "gemma2-9b-it"
   }
@@ -405,7 +405,7 @@ Configure GroqCloud settings for optimal performance.
 **Request Body:**
 ```json
 {
-  "defaultModel": "llama-3.1-70b-versatile",
+  "defaultModel": "llama-3.3-70b-versatile",
   "fallbackModel": "mixtral-8x7b-32768",
   "performanceMode": "balanced",
   "caching": {
@@ -443,7 +443,7 @@ Configure intelligent load balancing across GroqCloud models.
   "strategy": "weighted_round_robin",
   "models": [
     {
-      "id": "llama-3.1-70b-versatile",
+      "id": "llama-3.3-70b-versatile",
       "weight": 50,
       "maxConcurrency": 10,
       "priority": 1
@@ -491,7 +491,7 @@ Monitor and optimize GroqCloud usage costs.
   "totalCostUSD": 45.67,
   "costBreakdown": {
     "byModel": {
-      "llama-3.1-70b-versatile": 28.90,
+      "llama-3.3-70b-versatile": 28.90,
       "mixtral-8x7b-32768": 12.45,
       "gemma2-9b-it": 4.32
     },
@@ -553,7 +553,7 @@ Monitor GroqCloud service health and performance in real-time.
     "errorRate": 0.002
   },
   "modelStatus": {
-    "llama-3.1-70b-versatile": {
+    "llama-3.3-70b-versatile": {
       "status": "healthy",
       "activeRequests": 12,
       "averageLatencyMs": 245,
@@ -610,7 +610,7 @@ Get comprehensive usage analytics and insights.
     }
   ],
   "modelUsageDistribution": {
-    "llama-3.1-70b-versatile": 0.55,
+    "llama-3.3-70b-versatile": 0.55,
     "mixtral-8x7b-32768": 0.32,
     "gemma2-9b-it": 0.13
   },
@@ -713,9 +713,9 @@ All GroqCloud API endpoints return errors in a consistent format:
 {
   "error": {
     "code": "GROQ_MODEL_UNAVAILABLE",
-    "message": "The requested model llama-3.1-70b-versatile is temporarily unavailable",
+    "message": "The requested model llama-3.3-70b-versatile is temporarily unavailable",
     "details": {
-      "model": "llama-3.1-70b-versatile",
+      "model": "llama-3.3-70b-versatile",
       "reason": "High demand - model queue full",
       "estimatedWaitTimeSeconds": 45,
       "suggestedAlternatives": ["mixtral-8x7b-32768", "gemma2-9b-it"],
@@ -749,7 +749,7 @@ All GroqCloud API endpoints return errors in a consistent format:
   "fallbackStrategy": {
     "enabled": true,
     "fallbackChain": [
-      "llama-3.1-70b-versatile",
+      "llama-3.3-70b-versatile",
       "mixtral-8x7b-32768", 
       "gemma2-9b-it",
       "localLLM"
@@ -837,7 +837,7 @@ import os
 # Initialize GroqCloud LLM
 llm = ChatGroq(
     groq_api_key=os.getenv("GROQCLOUD_API_KEY"),
-    model_name="llama-3.1-70b-versatile",
+    model_name="llama-3.3-70b-versatile",
     temperature=0.7,
     max_tokens=4096
 )
@@ -908,13 +908,13 @@ import { GroqCloudClient } from '@predict-lotto-nz/groqcloud-client';
 const client = new GroqCloudClient({
   apiKey: process.env.GROQCLOUD_API_KEY,
   baseUrl: 'http://localhost:5000',
-  defaultModel: 'llama-3.1-70b-versatile'
+  defaultModel: 'llama-3.3-70b-versatile'
 });
 
 // Generate predictions
 const predictions = await client.predictions.generate({
   count: 5,
-  model: 'llama-3.1-70b-versatile',
+  model: 'llama-3.3-70b-versatile',
   temperature: 0.7,
   includeReasoning: true
 });
@@ -939,14 +939,14 @@ stream.on('complete', (prediction) => {
 
 // Batch predictions
 const batchResults = await client.predictions.batch([
-  { count: 3, model: 'llama-3.1-70b-versatile' },
+  { count: 3, model: 'llama-3.3-70b-versatile' },
   { count: 2, model: 'gemma2-9b-it' }
 ]);
 
 // Model comparison
 const comparison = await client.models.compare({
   count: 3,
-  models: ['llama-3.1-70b-versatile', 'mixtral-8x7b-32768']
+  models: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768']
 });
 ```
 
@@ -963,13 +963,13 @@ import os
 client = GroqCloudClient(
     api_key=os.getenv("GROQCLOUD_API_KEY"),
     base_url="http://localhost:5000",
-    default_model="llama-3.1-70b-versatile"
+    default_model="llama-3.3-70b-versatile"
 )
 
 # LangChain integration
 llm = ChatGroq(
     groq_api_key=os.getenv("GROQCLOUD_API_KEY"),
-    model_name="llama-3.1-70b-versatile"
+    model_name="llama-3.3-70b-versatile"
 )
 
 # Create prediction chain
@@ -999,7 +999,7 @@ async def async_predictions():
 
 # Batch predictions
 batch_results = client.predictions.batch([
-    {"count": 3, "model": "llama-3.1-70b-versatile"},
+    {"count": 3, "model": "llama-3.3-70b-versatile"},
     {"count": 2, "model": "gemma2-9b-it"}
 ])
 
@@ -1018,13 +1018,13 @@ npm install -g @predict-lotto-nz/groqcloud-cli
 groqcloud config set-api-key gsk_your_api_key_here
 
 # Generate predictions
-groqcloud predict --count 5 --model llama-3.1-70b-versatile --reasoning
+groqcloud predict --count 5 --model llama-3.3-70b-versatile --reasoning
 
 # Stream predictions
 groqcloud predict --count 1 --stream --model mixtral-8x7b-32768
 
 # Compare models
-groqcloud compare --models llama-3.1-70b-versatile,mixtral-8x7b-32768 --count 3
+groqcloud compare --models llama-3.3-70b-versatile,mixtral-8x7b-32768 --count 3
 
 # View analytics
 groqcloud analytics --timeframe 7d --model all
@@ -1049,7 +1049,7 @@ Create complex prediction workflows using LangChain chains:
     {
       "name": "analysis",
       "prompt": "Analyze lottery data: {historical_data}",
-      "model": "llama-3.1-70b-versatile"
+      "model": "llama-3.3-70b-versatile"
     },
     {
       "name": "prediction",
@@ -1183,7 +1183,7 @@ Real-time streaming using LangChain callbacks:
 ```
 data: {"type": "chain_start", "chainId": "prediction_chain"}
 
-data: {"type": "llm_start", "model": "llama-3.1-70b-versatile"}
+data: {"type": "llm_start", "model": "llama-3.3-70b-versatile"}
 
 data: {"type": "llm_new_token", "token": "Based"}
 
@@ -1206,7 +1206,7 @@ GROQCLOUD_API_KEY=gsk_your_groqcloud_api_key_here
 GROQCLOUD_BASE_URL=https://api.groq.com/openai/v1
 
 # Model Configuration
-GROQCLOUD_DEFAULT_MODEL=llama-3.1-70b-versatile
+GROQCLOUD_DEFAULT_MODEL=llama-3.3-70b-versatile
 GROQCLOUD_FALLBACK_MODEL=mixtral-8x7b-32768
 GROQCLOUD_MAX_TOKENS=4096
 GROQCLOUD_TEMPERATURE=0.7

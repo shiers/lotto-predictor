@@ -78,7 +78,7 @@ pip install tiktoken
 ```python
 # .env file
 GROQCLOUD_API_KEY=gsk_your_groqcloud_api_key_here
-GROQCLOUD_MODEL=llama-3.1-70b-versatile
+GROQCLOUD_MODEL=llama-3.3-70b-versatile
 GROQCLOUD_TEMPERATURE=0.7
 GROQCLOUD_MAX_TOKENS=4096
 GROQCLOUD_TOP_P=0.9
@@ -98,7 +98,7 @@ load_dotenv()
 # Initialize GroqCloud LLM
 llm = ChatGroq(
     groq_api_key=os.getenv("GROQCLOUD_API_KEY"),
-    model_name=os.getenv("GROQCLOUD_MODEL", "llama-3.1-70b-versatile"),
+    model_name=os.getenv("GROQCLOUD_MODEL", "llama-3.3-70b-versatile"),
     temperature=float(os.getenv("GROQCLOUD_TEMPERATURE", "0.7")),
     max_tokens=int(os.getenv("GROQCLOUD_MAX_TOKENS", "4096")),
     top_p=float(os.getenv("GROQCLOUD_TOP_P", "0.9"))
@@ -136,7 +136,7 @@ class GroqLotteryPredictor:
     def __init__(self):
         self.llm = ChatGroq(
             groq_api_key=os.getenv("GROQCLOUD_API_KEY"),
-            model_name=os.getenv("GROQCLOUD_MODEL", "llama-3.1-70b-versatile"),
+            model_name=os.getenv("GROQCLOUD_MODEL", "llama-3.3-70b-versatile"),
             temperature=0.7,
             max_tokens=2048
         )
@@ -269,7 +269,7 @@ GROQCLOUD_API_KEY=gsk_your_groqcloud_api_key_here
 GROQCLOUD_BASE_URL=https://api.groq.com/openai/v1
 
 # Model Configuration
-GROQCLOUD_MODEL=llama-3.1-70b-versatile
+GROQCLOUD_MODEL=llama-3.3-70b-versatile
 GROQCLOUD_FALLBACK_MODEL=mixtral-8x7b-32768
 GROQCLOUD_TEMPERATURE=0.7
 GROQCLOUD_MAX_TOKENS=4096
@@ -317,7 +317,7 @@ class GroqCloudConfig(BaseSettings):
     base_url: str = Field("https://api.groq.com/openai/v1", env="GROQCLOUD_BASE_URL")
     
     # Model Settings
-    model: str = Field("llama-3.1-70b-versatile", env="GROQCLOUD_MODEL")
+    model: str = Field("llama-3.3-70b-versatile", env="GROQCLOUD_MODEL")
     fallback_model: str = Field("mixtral-8x7b-32768", env="GROQCLOUD_FALLBACK_MODEL")
     temperature: float = Field(0.7, env="GROQCLOUD_TEMPERATURE")
     max_tokens: int = Field(4096, env="GROQCLOUD_MAX_TOKENS")
@@ -351,7 +351,7 @@ groq_config = GroqCloudConfig()
 ```python
 # Best for: High accuracy, complex reasoning, detailed analysis
 model_config = {
-    "model_name": "llama-3.1-70b-versatile",
+    "model_name": "llama-3.3-70b-versatile",
     "context_length": 131072,
     "strengths": ["complex_reasoning", "detailed_analysis", "high_accuracy"],
     "use_cases": ["detailed_predictions", "complex_pattern_analysis"],
@@ -397,7 +397,7 @@ class DynamicModelSelector:
     def __init__(self, config: GroqCloudConfig):
         self.config = config
         self.models = {
-            "high_accuracy": "llama-3.1-70b-versatile",
+            "high_accuracy": "llama-3.3-70b-versatile",
             "balanced": "mixtral-8x7b-32768",
             "fast": "gemma2-9b-it"
         }
@@ -1183,7 +1183,7 @@ class GroqErrorHandler:
         ]
         
         self.fallback_models = [
-            "llama-3.1-70b-versatile",
+            "llama-3.3-70b-versatile",
             "mixtral-8x7b-32768",
             "gemma2-9b-it"
         ]

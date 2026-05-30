@@ -263,8 +263,7 @@ For detailed setup instructions, see:
 - **Production Mode** (current): Code changes require rebuild
 - **Development Mode** (recommended): Automatic hot-reload
 
-**📚 Complete Guide**: See [DEVELOPMENT_VS_PRODUCTION.md](DEVELOPMENT_VS_PRODUCTION.md) for detailed comparison  
-**🔧 Workflow Guide**: See [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) for complete instructions
+**📚 Complete Guide**: See [DEVELOPMENT_VS_PRODUCTION.md](DEVELOPMENT_VS_PRODUCTION.md) for detailed comparison
 
 ### Quick Start - Development Mode
 

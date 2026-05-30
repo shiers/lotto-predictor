@@ -8,7 +8,7 @@ This is a monorepo containing three main services that work together to provide 
 
 ```
 predict-lotto-nz/
-├── backend/                    # .NET Core Web API Service
+├── backend/                    # .NET 8 Web API Service
 │   ├── Controllers/           # API Controllers
 │   ├── Services/             # Business Logic Services
 │   ├── Models/               # Data Models and DTOs
@@ -23,7 +23,7 @@ predict-lotto-nz/
 │   │   ├── components/       # Vue Components
 │   │   ├── views/           # Page Views
 │   │   ├── services/        # API Service Layer
-│   │   ├── store/           # Vuex/Pinia State Management
+│   │   ├── stores/          # Pinia State Management
 │   │   └── assets/          # Static Assets
 │   ├── public/              # Public Assets
 │   ├── Dockerfile           # Production Docker image
@@ -79,11 +79,15 @@ predict-lotto-nz/
 ### Backend → Predictor
 - HTTP REST API calls
 - JSON request/response format
-- Fallback chain: AWS LLM → FastAPI → Frequency
+- Provider chain: GroqCloud LLM → FastAPI → Frequency (with availability checks)
+
+### Backend → External Services
+- GroqCloud API (llama-3.3-70b-versatile) for AI predictions
+- Statistical analysis engine for prediction context
+- AWS Bedrock (registered, not yet implemented)
 
 ### Predictor → External Services
-- OpenAI GPT API integration
-- AWS LLM services (future)
+- OpenAI GPT API integration (fallback)
 - ML model inference
 
 ## Development Workflow
@@ -95,17 +99,18 @@ predict-lotto-nz/
 
 ## Key Technologies
 
-- **Backend**: .NET 6, Entity Framework Core, PostgreSQL
-- **Frontend**: Vue.js 3, TypeScript, Axios, Vuex/Pinia
-- **Predictor**: Python 3.9+, FastAPI, scikit-learn, OpenAI API
-- **Infrastructure**: Docker, Docker Compose, PostgreSQL
-- **Testing**: xUnit (.NET), Jest (Vue.js), pytest (Python)
+- **Backend**: .NET 8, Entity Framework Core, PostgreSQL, Redis
+- **Frontend**: Vue.js 3, TypeScript, Axios, Pinia
+- **Predictor**: Python 3.11+, FastAPI, scikit-learn, LangChain
+- **AI/LLM**: GroqCloud (llama-3.3-70b-versatile), OpenAI (fallback)
+- **Infrastructure**: Docker, Docker Compose, PostgreSQL, Redis
+- **Testing**: xUnit (.NET), Vitest (Vue.js), pytest (Python)
+- **Observability**: LangSmith for LLM tracing
 
 ## Getting Started
 
 1. Copy `.env.example` to `.env` and configure
-2. Run `make dev-setup` to initialize development environment
-3. Run `make up` to start all services
-4. Access frontend at http://localhost:3000
+2. Run `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d`
+3. Access frontend at http://localhost:3001 (dev) or http://localhost:3000 (production)
 
 See README.md for detailed setup instructions.

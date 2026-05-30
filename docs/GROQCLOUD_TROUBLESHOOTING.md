@@ -61,7 +61,7 @@ Invalid GroqCloud API response structure
 3. Check if environment variables are loaded correctly
 
 #### Issue 2: Model Decommissioned
-**Error**: "The model `llama-3.1-70b-versatile` has been decommissioned"
+**Error**: "The model `llama-3.3-70b-versatile` has been decommissioned"
 
 **Solution**:
 1. Update `.env` file: `GROQCLOUD_MODEL=llama-3.3-70b-versatile`

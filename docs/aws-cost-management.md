@@ -1,18 +1,5 @@
 # AWS Cost Management
 
-## Monthly Cost Breakdown (March 2026 baseline)
-
-| Service                | Cost (USD)  | Notes                                    |
-| ---------------------- | ----------- | ---------------------------------------- |
-| Amazon VPC             | $18.86      | Interface VPC endpoints (~$0.01/hr each) |
-| Amazon ECS             | $4.69       | Fargate task runtime                     |
-| Amazon RDS             | $2.85       | PostgreSQL db.t3.micro                   |
-| Elastic Load Balancing | $2.46       | ALB hourly + LCU charges                 |
-| Amazon ElastiCache     | $2.35       | Redis cache.t3.micro                     |
-| Amazon Route 53        | $0.61       | DNS hosted zone + queries                |
-| AWS Secrets Manager    | $0.05       | 3 secrets                                |
-| **Total**              | **~$31.88** |                                          |
-
 ## Shutting Down (Zero Cost Mode)
 
 Run the shutdown script from the repo root:
