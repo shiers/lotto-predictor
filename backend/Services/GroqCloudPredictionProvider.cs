@@ -254,11 +254,11 @@ TOP CO-OCCURRING PAIRS: {topPairsStr}
 POWERBALL (last 20 draws): {pbLast20}
 
 === MULTI-LINE OPTIMIZATION RULES ===
-- Spread numbers across lines: minimize overlap between lines
+- Spread numbers across lines but ALLOW highly overdue numbers to appear on 2 lines
 - Each line should have a different odd/even balance
 - Use different Powerball values on each line
 - Cover different number ranges (some lines favor low, some high, some mixed)
-- Aim for each number 1-40 to appear at most once across all {count} lines (maximize unique coverage)
+- Numbers that are significantly overdue (gap > 1.5x average) may appear on multiple lines
 
 === REQUIREMENTS ===
 - Generate exactly {count} predictions

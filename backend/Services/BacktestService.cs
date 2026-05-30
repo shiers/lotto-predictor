@@ -342,15 +342,17 @@ public class BacktestService : IBacktestService
         var weights = new Dictionary<int, double>();
         for (int n = 1; n <= 40; n++)
         {
+            var gap = gaps.GetValueOrDefault(n, 0);
+            var avgGap = avgGaps.GetValueOrDefault(n, 6.67); // Expected: 40/6 ≈ 6.67
+            var overdueRatio = gap / Math.Max(avgGap, 1.0);
+            
             if (usedNumbers.Contains(n))
             {
-                weights[n] = 0.1; // Heavily penalize already-used numbers
+                // Allow reuse of highly overdue numbers (but penalize normal ones)
+                weights[n] = overdueRatio > 1.5 ? 0.5 : 0.05;
             }
             else
             {
-                var gap = gaps.GetValueOrDefault(n, 0);
-                var avgGap = avgGaps.GetValueOrDefault(n, 6.67); // Expected: 40/6 ≈ 6.67
-                var overdueRatio = gap / Math.Max(avgGap, 1.0);
                 weights[n] = 1.0 + Math.Max(0, overdueRatio - 0.5); // Boost overdue numbers
             }
         }
