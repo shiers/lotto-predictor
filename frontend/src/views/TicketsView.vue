@@ -79,9 +79,12 @@
       <!-- Ticket List -->
       <div v-if="tickets.length > 0" class="tickets-list">
         <h3>Your Tickets</h3>
-        <div v-for="ticket in tickets" :key="ticket.id" class="ticket-card">
+        <div v-for="ticket in tickets" :key="ticket.id" class="ticket-card" :class="{ 'ai-ticket': ticket.source === 'AI Predicted', 'manual-ticket': ticket.source === 'Manual' }">
           <div class="ticket-header">
             <span class="draw-badge">Draw #{{ ticket.drawNumber }}</span>
+            <span class="source-badge" :class="{ 'source-ai': ticket.source === 'AI Predicted', 'source-manual': ticket.source === 'Manual' }">
+              {{ ticket.source === 'AI Predicted' ? '🤖 AI Predicted' : '✋ Manual' }}
+            </span>
             <span class="ticket-date">{{ formatDate(ticket.drawDate) }}</span>
             <span v-if="ticket.winningNumbers" class="winning-numbers">
               Winning: <span v-for="n in ticket.winningNumbers" :key="n" class="win-num">{{ n }}</span>
@@ -244,8 +247,13 @@ onMounted(() => {
 .stat-card.negative .stat-value { color: #dc3545; }
 
 .ticket-card { background: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.ticket-card.ai-ticket { border-left: 3px solid #9C27B0; }
+.ticket-card.manual-ticket { border-left: 3px solid #42b883; }
 .ticket-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
 .draw-badge { background: var(--color-background-soft); padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: bold; font-size: 0.85rem; }
+.source-badge { padding: 0.2rem 0.6rem; border-radius: 10px; font-size: 0.75rem; font-weight: 500; }
+.source-ai { background: rgba(156, 39, 176, 0.15); color: #CE93D8; border: 1px solid rgba(156, 39, 176, 0.3); }
+.source-manual { background: rgba(66, 184, 131, 0.15); color: #42b883; border: 1px solid rgba(66, 184, 131, 0.3); }
 .ticket-date { font-size: 0.85rem; color: var(--color-text); opacity: 0.7; }
 .ticket-winnings { margin-left: auto; font-weight: bold; }
 .ticket-winnings.won { color: #28a745; }
