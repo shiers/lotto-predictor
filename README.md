@@ -1,13 +1,13 @@
 # PredictLottoNZ
 
-A comprehensive full-stack web application for analyzing historical New Zealand lottery data and generating intelligent predictions using multiple algorithmic approaches including frequency analysis, machine learning, and AI-powered predictions.
+A comprehensive full-stack web application for analyzing historical New Zealand lottery data and generating intelligent predictions using statistical analysis, machine learning, and AI-powered predictions with multi-line coverage optimisation.
 
 ## 🏗️ Architecture
 
-PredictLottoNZ employs a microservices architecture with four main components:
+PredictLottoNZ employs a microservices architecture with five main components:
 
 - **Frontend**: Vue.js 3 single-page application with TypeScript
-- **Backend**: .NET Core 8 Web API with Entity Framework Core
+- **Backend**: .NET 8 Web API with Entity Framework Core
 - **Predictor**: Python FastAPI service with ML and GPT integration
 - **Database**: PostgreSQL 15 with automated migrations
 - **Cache**: Redis 7 for distributed caching and performance optimization
@@ -19,24 +19,28 @@ graph TB
     end
 
     subgraph "Backend Layer"
-        API[.NET Core Web API]
+        API[.NET 8 Web API]
+        STATS[Statistical Analysis Engine]
         DB[(PostgreSQL Database)]
         REDIS[(Redis Cache)]
     end
 
     subgraph "Prediction Layer"
+        GROQ[GroqCloud LLM]
         FASTAPI[Python FastAPI Service]
         ML[ML Models]
         GPT[GPT Integration]
     end
 
     subgraph "Future Services"
-        AWS[AWS LLM Service]
+        AWS[AWS Bedrock LLM]
     end
 
     VUE --> API
     API --> DB
     API --> REDIS
+    API --> STATS
+    API --> GROQ
     API --> FASTAPI
     API -.-> AWS
     FASTAPI --> ML
@@ -52,7 +56,7 @@ graph TB
 
 ### Required for Local Development
 
-- **.NET SDK**: Version 6.0 or higher
+- **.NET SDK**: Version 8.0 or higher
 
 ## 📚 API Documentation
 
@@ -231,12 +235,16 @@ For detailed setup instructions, see:
 
 ### AI Services (Optional)
 
-| Variable                | Required | Default     | Description                        |
-| ----------------------- | -------- | ----------- | ---------------------------------- |
-| `OPENAI_API_KEY`        | ❌       | -           | OpenAI API key for GPT predictions |
-| `AWS_REGION`            | ❌       | `us-west-2` | AWS region for LLM services        |
-| `AWS_ACCESS_KEY_ID`     | ❌       | -           | AWS access key ID                  |
-| `AWS_SECRET_ACCESS_KEY` | ❌       | -           | AWS secret access key              |
+| Variable                | Required | Default                          | Description                        |
+| ----------------------- | -------- | -------------------------------- | ---------------------------------- |
+| `GROQCLOUD_API_KEY`     | ❌       | -                                | GroqCloud API key (primary LLM)    |
+| `GROQCLOUD_MODEL`       | ❌       | `llama-3.3-70b-versatile`        | GroqCloud model to use             |
+| `GROQCLOUD_BASE_URL`    | ❌       | `https://api.groq.com/openai/v1` | GroqCloud API base URL             |
+| `FASTAPI_BASE_URL`      | ❌       | `http://predictor:8000`          | FastAPI predictor service URL      |
+| `OPENAI_API_KEY`        | ❌       | -                                | OpenAI API key for GPT predictions |
+| `AWS_REGION`            | ❌       | `ap-southeast-2`                 | AWS region for LLM services        |
+| `AWS_ACCESS_KEY_ID`     | ❌       | -                                | AWS access key ID                  |
+| `AWS_SECRET_ACCESS_KEY` | ❌       | -                                | AWS secret access key              |
 
 ### Application Configuration
 
@@ -415,49 +423,65 @@ predict-lotto-nz/
 
 ## 🔧 Services
 
-### Backend (.NET Core Web API)
+### Backend (.NET 8 Web API)
 
 **Port**: 5000 | **Health Check**: `/api/health`
 
 **Features**:
 
 - CSV file upload and parsing with duplicate detection
-- Historical lottery data management
-- Number combination validation and storage
-- Prediction provider chain with fallback support
+- Historical lottery data management (1500+ draws from 2008-present)
+- Statistical analysis engine (number gaps, sum distributions, pair co-occurrence, draw patterns)
+- Enhanced AI prediction with GroqCloud LLM using statistical context
+- Multi-provider prediction chain with availability checks and circuit breakers
+- Multi-line coverage optimisation with sum range validation
+- Backtesting framework for strategy comparison (enhanced vs random)
+- Ticket tracking with auto-verification against draw results
+- Prediction accuracy scoring and history tracking
 - RESTful API with Swagger documentation
 - Entity Framework Core with PostgreSQL
+- Redis distributed caching
 - Comprehensive logging and error handling
 
 **Key Endpoints**:
 
+- `GET /api/predictions/generate?count=4` - Generate AI predictions
+- `GET /api/predictions/stored` - Get stored predictions
+- `GET /api/backtest/compare?drawCount=50&linesPerDraw=4` - Compare strategies
+- `GET /api/backtest/run?drawCount=50&enhanced=true` - Run single strategy backtest
+- `POST /api/ticket` - Add a purchased ticket (auto-checks against draw)
+- `GET /api/ticket` - List tracked tickets with results
+- `GET /api/ticket/summary` - Performance summary (ROI, match distribution)
 - `POST /api/lotto/upload` - Upload lottery CSV files
 - `GET /api/lotto/latest` - Get latest lottery draw
-- `GET /api/lotto/exists/{draw}` - Check if draw exists
-- `POST /api/combinations/upload` - Upload number combinations
-- `GET /api/combinations/predictions` - Get predictions
+- `GET /api/lotto/draws?page=1&pageSize=10` - Paginated draw history
 - `GET /api/health` - Health check
 
 ### Frontend (Vue.js)
 
-**Port**: 3001 | **Health Check**: `/health`
+**Port**: 3001 (dev) / 3000 (production) | **Health Check**: `/health`
 
 **Features**:
 
 - Modern Vue 3 with TypeScript and Composition API
+- Prediction generation with statistical reasoning display
+- Ticket tracker with number highlighting (matched/bonus/powerball)
+- Backtest dashboard with strategy comparison visualisation
 - File upload with real-time progress tracking
 - Responsive design for desktop and mobile
 - Toast notifications for user feedback
-- Prediction visualization and management
+- Help guide with feature documentation
 - State management with Pinia
 - Component-based architecture
 
-**Key Components**:
+**Key Pages**:
 
-- `FileUpload.vue` - File upload with progress
-- `PredictionsView.vue` - Prediction display
-- `LatestDraw.vue` - Latest draw information
-- `SideMenu.vue` - Navigation and notifications
+- `PredictionsView` - Generate and browse AI predictions
+- `TicketsView` - Track purchased tickets, view results with colour-coded matches
+- `BacktestView` - Run enhanced vs random strategy comparisons
+- `DrawsView` - Browse historical draw results
+- `LookupView` - Number frequency lookup
+- `HelpView` - Feature documentation and usage guide
 
 ### Predictor (Python FastAPI)
 
@@ -1048,20 +1072,37 @@ For support and questions:
 
 ## 🔄 Changelog
 
-### Version 1.0.0 (Current)
+### Version 1.1.0 (Current)
+
+- Statistical analysis engine (number gaps, sum distributions, pair co-occurrence)
+- Enhanced GroqCloud LLM prediction with full statistical context
+- Multi-line coverage optimisation with sum range validation (P10-P90)
+- Backtesting framework with enhanced vs random strategy comparison
+- Ticket tracking with auto-verification against draw results
+- Provider availability checks (IsAvailableAsync) to prevent timeouts
+- Frontend: Ticket Tracker page with colour-coded number matching
+- Frontend: Backtest Dashboard with comparison table and distribution charts
+- Frontend: Help Guide with feature documentation
+- Fixed Docker hot-reload (WORKDIR alignment with volume mount)
+- Added FASTAPI_BASE_URL to docker-compose for proper service discovery
+
+### Version 1.0.0
 
 - Initial release with full-stack architecture
 - CSV file upload and parsing
 - Frequency-based predictions
-- ML and GPT integration
-- Docker containerization
-- Comprehensive testing suite
+- ML and GPT integration via FastAPI
+- Multi-provider prediction chain with circuit breakers
+- Docker containerization with dev/production modes
+- Comprehensive property-based testing suite
+- Redis distributed caching
+- Prediction accuracy tracking
 
 ### Planned Features
 
-- Real-time lottery data feeds
-- Advanced ML models (neural networks)
-- User authentication and profiles
-- Prediction accuracy tracking
-- Mobile application
-- Cloud deployment automation
+- AWS Bedrock LLM integration (provider registered, not yet implemented)
+- Ensemble scoring (generate many candidates, pick best statistically)
+- Temperature/model tuning experiments
+- Automated CSV import from Lottolyzer
+- Mobile-responsive ticket entry
+- Cloud deployment automation (AWS ECS)
