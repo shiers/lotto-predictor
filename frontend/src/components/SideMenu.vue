@@ -26,6 +26,18 @@
           </RouterLink>
         </li>
         <li>
+          <RouterLink to="/tickets" @click="closeMenu" class="menu-link">
+            <span class="menu-icon">🎫</span>
+            Ticket Tracker
+          </RouterLink>
+        </li>
+        <li>
+          <RouterLink to="/backtest" @click="closeMenu" class="menu-link">
+            <span class="menu-icon">📈</span>
+            Backtest
+          </RouterLink>
+        </li>
+        <li>
           <RouterLink to="/draws" @click="closeMenu" class="menu-link">
             <span class="menu-icon">🎲</span>
             Draws
