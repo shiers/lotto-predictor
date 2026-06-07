@@ -33,7 +33,7 @@
               <input v-for="n in 6" :key="n" type="number" v-model.number="line.numbers[n-1]"
                      :placeholder="'#' + n" min="1" max="40" class="number-input" />
               <span class="pb-label">PB:</span>
-              <input type="number" v-model.number="line.powerball" placeholder="PB" min="1" max="10" class="pb-input" />
+              <input type="number" v-model.number="line.powerball" placeholder="0=none" min="0" max="10" class="pb-input" />
               <button @click="removeLine(idx)" class="btn-remove" v-if="newTicket.lines.length > 1">×</button>
             </div>
           </div>
@@ -106,7 +106,8 @@
                     }">
                 {{ num }}
               </span>
-              <span class="powerball-ball" :class="{ 'matched-pb': line.powerballMatched }">{{ line.powerball }}</span>
+              <span class="powerball-ball" :class="{ 'matched-pb': line.powerballMatched }" v-if="line.powerball > 0">{{ line.powerball }}</span>
+              <span class="powerball-na" v-else>-</span>
               <span v-if="line.division && line.division !== 'None'" class="division-badge">{{ line.division }} (${{ line.prize }})</span>
               <span v-if="line.mainMatches !== null" class="match-count">{{ line.mainMatches }}/6</span>
             </div>
@@ -272,6 +273,7 @@ onMounted(() => {
 .number-ball.matched-bonus { background: #9C27B0; color: white; border-color: #7B1FA2; }
 .powerball-ball { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; background: #fff3cd; border: 1px solid #f0ad4e; font-size: 0.8rem; font-weight: 500; color: #856404; margin-left: 0.5rem; }
 .powerball-ball.matched-pb { background: #f0ad4e; color: white; border-color: #e09900; }
+.powerball-na { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; font-size: 0.75rem; color: var(--color-text); opacity: 0.4; margin-left: 0.5rem; }
 .division-badge { background: #28a745; color: white; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; margin-left: 0.5rem; }
 .match-count { font-size: 0.75rem; color: var(--color-text); opacity: 0.6; margin-left: auto; }
 

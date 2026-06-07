@@ -48,8 +48,8 @@ public class TicketController : ControllerBase
             if (numbers.Length != 6 || numbers.Any(n => n < 1 || n > 40) || numbers.Distinct().Count() != 6)
                 return BadRequest($"Line {i + 1}: must have exactly 6 unique numbers between 1-40");
 
-            if (line.Powerball < 1 || line.Powerball > 10)
-                return BadRequest($"Line {i + 1}: Powerball must be between 1-10");
+            if (line.Powerball < 0 || line.Powerball > 10)
+                return BadRequest($"Line {i + 1}: Powerball must be between 0-10 (0 = Lotto only)");
 
             ticket.Lines.Add(new PurchasedTicketLine
             {
@@ -212,7 +212,7 @@ public class TicketController : ControllerBase
             var lineNumbers = new[] { line.Number1, line.Number2, line.Number3, line.Number4, line.Number5, line.Number6 };
             var mainMatches = lineNumbers.Intersect(winningNumbers).Count();
             var bonusMatched = lineNumbers.Contains(draw.BonusNumber);
-            var pbMatched = line.Powerball == draw.Powerball;
+            var pbMatched = line.Powerball > 0 && line.Powerball == draw.Powerball; // 0 = not playing Powerball
 
             line.MainMatches = mainMatches;
             line.BonusMatched = bonusMatched;

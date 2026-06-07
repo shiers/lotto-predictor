@@ -58,7 +58,7 @@ public class PurchasedTicketLine
     [Required] [Range(1, 40)] public int Number4 { get; set; }
     [Required] [Range(1, 40)] public int Number5 { get; set; }
     [Required] [Range(1, 40)] public int Number6 { get; set; }
-    [Required] [Range(1, 10)] public int Powerball { get; set; }
+    [Range(0, 10)] public int Powerball { get; set; } // 0 = Lotto only (no Powerball)
 
     // Results (populated after checking)
     public int? MainMatches { get; set; }
